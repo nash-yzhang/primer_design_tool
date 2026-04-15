@@ -1,0 +1,9 @@
+{
+  "k": 0.60,
+  "c": 0.70,
+  "minLen": 18,
+  "maxLen": 24,
+  "window": 3,
+  "lambdaJSD": 0.5,
+  "trimLimit": 500
+}

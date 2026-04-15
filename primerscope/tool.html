@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimerScope — Conservation Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="primerscope.css">
+</head>
+<body>
+
+<header>
+  <h1>PrimerScope</h1>
+  <span>// MSA Conservation · Window-JSD · Primer Suitability</span>
+  <div class="badge">ANALYTICAL</div>
+</header>
+
+<div class="main-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel" id="leftPanel">
+
+    <div id="uploadState" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="panel-header">
+        <span class="panel-label" id="seqLabel">ALIGNMENT INPUT</span>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint);" id="seqInfo"></span>
+      </div>
+      <div id="uploadZone" class="upload-zone" style="position:relative;">
+        <div class="upload-icon">⊕</div>
+        <div class="upload-title">Drop FASTA / click to upload</div>
+        <div class="upload-sub">BLAST-aligned multi-FASTA format</div>
+        <input type="file" id="fileInput" accept=".fasta,.fa,.txt,.aln"
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;">
+      </div>
+      <div id="seqDisplayWrap" class="seq-display" style="display:none;">
+        <div class="seq-meta" style="flex-wrap:wrap;gap:6px 14px;padding:6px 16px;">
+          <span class="seq-meta-item">Seq: <strong id="nSeqDisplay">—</strong></span>
+          <span class="seq-meta-item">Len: <strong id="lenDisplay">—</strong></span>
+          <span class="seq-meta-item" id="trimNote" style="cursor:pointer;color:var(--accent3);font-size:10px;display:none;" onclick="toggleFullSeq()">▶ Expand</span>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
+              FONT
+              <input type="range" id="seqFontSlider" min="10" max="22" step="1" value="14"
+                style="width:55px;margin:0;" oninput="applySeqDisplay()">
+              <span id="seqFontVal" style="color:var(--accent);min-width:18px;">14</span>px
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;cursor:pointer;">
+              <input type="checkbox" id="colorBasesCb" checked onchange="applySeqDisplay()" style="accent-color:var(--accent);cursor:pointer;">
+              A/T/G/C
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
+              LABEL/
+              <select id="labelIntervalSel" onchange="applySeqDisplay()"
+                style="background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:2px;cursor:pointer;">
+                <option value="5">5 nt</option>
+                <option value="10" selected>10 nt</option>
+                <option value="20">20 nt</option>
+                <option value="50">50 nt</option>
+              </select>
+            </label>
+          </span>
+        </div>
+        <div class="seq-scroll" id="seqScroll">
+          <!-- sequence content rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <div class="candidates-section" id="candidatesSection" style="display:none;">
+      <div class="panel-header" style="background:var(--surface2);">
+        <span class="panel-label active">PRIMER CANDIDATES</span>
+        <span id="candidateCount" style="margin-left:8px;font-family:var(--mono);font-size:10px;color:var(--accent);"></span>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint);">Score ≥ <span id="threshDisplay">—</span></span>
+      </div>
+      <div class="candidates-list" id="candidatesList">
+        <div class="no-candidates">Run analysis to find candidates</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="controls-section">
+      <div class="ctrl-title">Analysis Parameters</div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-name">Conservation Threshold</span>
+        <span class="ctrl-desc">Minimum JSD score for a primer window to be considered a candidate (k)</span>
+        <div class="ctrl-label">
+          <span>Score threshold <em>k</em></span>
+          <span class="ctrl-val" id="kVal">0.60</span>
+        </div>
+        <input type="range" id="kSlider" min="0" max="1" step="0.01" value="0.60" oninput="syncK(this.value)">
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-name">Primer Length Range</span>
+        <span class="ctrl-desc">Min and max primer length in nucleotides</span>
+        <div class="dual-input">
+          <div class="num-input-wrap">
+            <span class="num-input-label">MIN LENGTH</span>
+            <input type="number" id="minLen" value="18" min="10" max="40">
+          </div>
+          <div class="num-input-wrap">
+            <span class="num-input-label">MAX LENGTH</span>
+            <input type="number" id="maxLen" value="24" min="10" max="40">
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <span class="ctrl-name">Per-Locus Specificity Threshold</span>
+        <span class="ctrl-desc">Minimum JSD at a single position to count as a "conserved locus" in detail view (c)</span>
+        <div class="ctrl-label">
+          <span>Locus threshold <em>c</em></span>
+          <span class="ctrl-val" id="cVal">0.70</span>
+        </div>
+        <input type="range" id="cSlider" min="0" max="1" step="0.01" value="0.70" oninput="syncC(this.value)">
+      </div>
+
+      <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>▶ Run Analysis</button>
+    </div>
+
+    <div class="controls-section" id="statsSection" style="display:none;">
+      <div class="ctrl-title">Run Summary</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9;" id="runSummary"></div>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div class="status-bar">
+      <div class="status-item"><div class="status-dot" id="statusDot"></div><span id="statusMsg">No file loaded</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header" id="detailHeader" style="flex-direction:column;gap:0;padding:0;">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px 6px;flex-wrap:wrap;">
+      <span class="detail-primer-id" id="detailId">—</span>
+      <span id="detailChips" style="display:flex;gap:8px;flex-wrap:wrap;"></span>
+      <button class="detail-close" onclick="closeDetail()" style="margin-left:auto;">✕ Close</button>
+    </div>
+    <div id="detailTrackRow" style="padding:0 16px 8px;position:relative;">
+      <div id="locusTooltip" style="
+        display:none;position:fixed;z-index:200;
+        background:var(--surface2);border:1px solid var(--border-bright);
+        font-family:var(--mono);font-size:10px;color:var(--text);
+        padding:6px 10px;border-radius:3px;pointer-events:none;
+        white-space:nowrap;line-height:1.7;
+      "></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.1em;">
+        PER-LOCUS CONSERVATION
+        <span style="display:flex;align-items:center;gap:4px;">
+          <span>LOW</span>
+          <span style="display:inline-block;width:60px;height:5px;border-radius:2px;
+            background:linear-gradient(90deg,#0d0887,#6a00a8,#b12a90,#e16462,#fca636,#f0f921);"></span>
+          <span>HIGH</span>
+        </span>
+        <span style="color:var(--text-faint);opacity:0.6;">· hover locus for details</span>
+      </div>
+      <div id="detailTrack" style="display:flex;gap:1px;align-items:stretch;"></div>
+      <div id="detailRuler" style="display:flex;gap:1px;font-family:var(--mono);font-size:9px;color:var(--text-faint);margin-top:2px;"></div>
+    </div>
+  </div>
+  <div class="detail-body" id="detailBody" style="padding-top:8px;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="core.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
