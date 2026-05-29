@@ -7,7 +7,7 @@ A interest driven spontaneous project for browser-based PCR primer design tool. 
 1. Open primer_design_tool_standalone.html in any modern browser
 2. Drop or click to load a BLAST-aligned multi-FASTA file (.fasta, .fa, .txt, .aln)
 3. Adjust parameters if needed, then click **Run Analysis**
-4. Click any candidate primer to inspect per-locus conservation, GC%, Tm, and haplotype variants
+4. Review dominant A/T/G/C probability per position, then click any candidate primer to inspect per-locus conservation, GC%, Tm, and haplotype variants
 
 ## Parameters
 
@@ -16,10 +16,11 @@ A interest driven spontaneous project for browser-based PCR primer design tool. 
 | **k** - score threshold | 0.60 | Minimum 3-end-weighted JSD score to retain a candidate |
 | **Min / Max length** | 18 / 24 nt | Primer length search range |
 | **c** - locus threshold | 0.70 | Per-position JSD cutoff for conserved label |
+| Dominant base threshold | 0.900 | Filters positions whose highest A/T/G/C probability is at or above the selected value |
 
 ## Algorithm
 
-For each alignment column, computes JSD between the observed base frequency and a uniform background (lambda = 0.5). Applies a +-3 nt sliding-window smooth, then scores each candidate window with a 3-end-weighted sum. Greedy overlap removal retains the highest-scoring non-redundant set.
+On load, sequences that align better as reverse-complements to the first FASTA record are flipped to the reference direction. For each alignment column, computes JSD between the observed base frequency and a uniform background (lambda = 0.5). Applies a +-3 nt sliding-window smooth, then scores each candidate window with a 3-end-weighted sum. Greedy overlap removal retains the highest-scoring non-redundant set.
 
 ## Project layout
 

@@ -3,12 +3,15 @@
 const CONFIG = {
   k:          0.60,
   c:          0.70,
+  dominantThreshold: 0.900,
   minLen:     18,
   maxLen:     24,
   window:     3,
   lambdaJSD:  0.5,
   trimLimit:  500,
 };
+
+const BASES = ['A', 'T', 'G', 'C'];
 
 // ── FASTA PARSING ────────────────────────────────────────────────────────────
 function parseFASTA(text) {
@@ -26,6 +29,53 @@ function parseFASTA(text) {
   }
   if (cur) seqs.push(cur);
   return seqs;
+}
+
+function reverseComplement(seq) {
+  const comp = { A: 'T', T: 'A', G: 'C', C: 'G', N: 'N', '-': '-', '.': '.' };
+  let out = '';
+  for (let i = seq.length - 1; i >= 0; i--) out += comp[seq[i]] || 'N';
+  return out;
+}
+
+function alignedIdentity(refSeq, querySeq) {
+  const L = Math.min(refSeq.length, querySeq.length);
+  let matches = 0;
+  let compared = 0;
+  for (let i = 0; i < L; i++) {
+    const r = refSeq[i];
+    const q = querySeq[i];
+    if (!BASES.includes(r) || !BASES.includes(q)) continue;
+    compared++;
+    if (r === q) matches++;
+  }
+  return { identity: compared ? matches / compared : 0, compared };
+}
+
+function orientSequencesToReference(seqs, minDelta = 0.05) {
+  if (seqs.length < 2) return { seqs, flipped: [] };
+
+  const refSeq = seqs[0].seq;
+  const flipped = [];
+  const oriented = seqs.map((s, idx) => {
+    if (idx === 0) return { ...s, orientation: 'reference' };
+
+    const forward = alignedIdentity(refSeq, s.seq);
+    const rcSeq = reverseComplement(s.seq);
+    const reverse = alignedIdentity(refSeq, rcSeq);
+    const shouldFlip = reverse.compared >= 8 && reverse.identity > forward.identity + minDelta;
+
+    if (!shouldFlip) return { ...s, orientation: 'forward' };
+
+    flipped.push({
+      name: s.name,
+      forwardIdentity: forward.identity,
+      reverseIdentity: reverse.identity,
+    });
+    return { ...s, seq: rcSeq, orientation: 'reverse-complement' };
+  });
+
+  return { seqs: oriented, flipped };
 }
 
 function buildConsensus(seqs) {
@@ -77,7 +127,7 @@ function computeJSD(seqs, windowSize, lambda) {
 
     const freq = { A: 0, T: 0, G: 0, C: 0 };
     if (nvalid > 0) {
-      for (const b of ['A', 'T', 'G', 'C']) freq[b] = cnt[b] / nvalid;
+      for (const b of BASES) freq[b] = cnt[b] / nvalid;
     }
     colDistribs.push({ freq, cnt: { ...cnt }, nvalid, gapFrac });
 
@@ -104,6 +154,17 @@ function computeJSD(seqs, windowSize, lambda) {
   const normed = windowed.map(v => v / mx);
 
   return { raw, windowed: normed, colDistribs };
+}
+
+function dominantBaseStats(colDistribs) {
+  return colDistribs.map((col, idx) => {
+    const entries = BASES.map(base => ({
+      base,
+      prob: col.freq[base] || 0,
+      count: col.cnt[base] || 0,
+    })).sort((a, b) => b.prob - a.prob);
+    return { pos: idx + 1, ...entries[0], nvalid: col.nvalid, gapFrac: col.gapFrac };
+  });
 }
 
 // 3'-weighted primer suitability score

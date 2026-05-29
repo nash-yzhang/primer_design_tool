@@ -1,6 +1,7 @@
 {
   "k": 0.60,
   "c": 0.70,
+  "dominantThreshold": 0.900,
   "minLen": 18,
   "maxLen": 24,
   "window": 3,

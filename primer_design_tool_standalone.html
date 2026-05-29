@@ -8,756 +8,1114 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d0f14;
-    --surface: #13161e;
-    --surface2: #1a1e2a;
-    --surface3: #222736;
-    --border: #2a3045;
-    --border-bright: #3d4d6a;
-    --accent: #4af0a0;
-    --accent2: #4ab8f0;
-    --accent3: #f0a04a;
-    --accent4: #f04a7a;
-    --text: #d0dcea;
-    --text-dim: #7a8aaa;
-    --text-faint: #3a4a60;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Subtle grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.18;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  header {
-    position: relative;
-    z-index: 10;
-    padding: 18px 28px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 18px;
-    background: rgba(13,15,20,0.95);
-    backdrop-filter: blur(8px);
-  }
-
-  header h1 {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.04em;
-  }
-
-  header span {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 0.08em;
-  }
-
-  .badge {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent2);
-    background: rgba(74,184,240,0.08);
-    border: 1px solid rgba(74,184,240,0.2);
-    padding: 3px 8px;
-    border-radius: 2px;
-    letter-spacing: 0.1em;
-  }
-
-  .main-layout {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 0;
-    height: calc(100vh - 54px);
-    overflow: hidden;
-  }
-
-  /* LEFT PANEL */
-  .left-panel {
-    grid-column: 1;
-    grid-row: 1 / 3;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .panel-header {
-    padding: 12px 20px 10px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
-
-  .panel-label.active { color: var(--accent); }
-
-  /* Upload zone */
-  .upload-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1.5px dashed var(--border);
-    margin: 20px;
-    border-radius: 4px;
-  }
-
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--accent);
-    background: rgba(74,240,160,0.03);
-  }
-
-  .upload-icon {
-    font-size: 36px;
-    margin-bottom: 14px;
-    opacity: 0.6;
-  }
-
-  .upload-title {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .upload-sub {
-    font-size: 11px;
-    color: var(--text-faint);
-  }
-
-  #fileInput { /* overlay handled via inline style on element */ }
-
-  /* Sequence display */
-  .seq-display {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .seq-meta {
-    padding: 8px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-  }
-
-  .seq-meta-item {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
-  .seq-meta-item strong { color: var(--accent); }
-
-  .seq-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.8;
-  }
-
-  .seq-scroll::-webkit-scrollbar { width: 4px; }
-  .seq-scroll::-webkit-scrollbar-track { background: transparent; }
-  .seq-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
-
-  .seq-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 4px;
-    align-items: baseline;
-  }
-
-  .seq-locus {
-    color: var(--text-faint);
-    font-size: 10px;
-    min-width: 42px;
-    text-align: right;
-    user-select: none;
-    flex-shrink: 0;
-  }
-
-  .seq-bases {
-    color: var(--text);
-    letter-spacing: 0.08em;
-    word-break: break-all;
-  }
-
-  .seq-bases .base-A { color: #5de8a8; }
-  .seq-bases .base-T { color: #f07a5a; }
-  .seq-bases .base-G { color: #5ab4f0; }
-  .seq-bases .base-C { color: #e0c04a; }
-  .seq-bases .base-gap { color: var(--text-faint); }
-
-  .seq-trimmed-note {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--accent3);
-    cursor: pointer;
-    font-family: var(--mono);
-  }
-
-  .seq-trimmed-note:hover { text-decoration: underline; }
-
-  /* Primer highlight */
-  .base-highlight {
-    background: rgba(74,240,160,0.18);
-    border-bottom: 2px solid var(--accent);
-    border-radius: 1px;
-    cursor: pointer;
-  }
-
-  /* Candidate list */
-  .candidates-section {
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    max-height: 320px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .candidates-section .panel-header { background: var(--surface2); }
-
-  .candidates-list {
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .candidates-list::-webkit-scrollbar { width: 4px; }
-  .candidates-list::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
-
-  .candidate-item {
-    padding: 8px 20px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: background 0.15s;
-  }
-
-  .candidate-item:hover { background: var(--surface2); }
-  .candidate-item.active { background: rgba(74,240,160,0.06); border-left: 2px solid var(--accent); }
-
-  .cand-pos {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    min-width: 70px;
-  }
-
-  .cand-seq {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .cand-score {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    min-width: 48px;
-    text-align: right;
-  }
-
-  .score-bar-wrap {
-    width: 60px;
-    height: 4px;
-    background: var(--surface3);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .score-bar {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.3s;
-  }
-
-  .no-candidates {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-faint);
-    font-family: var(--mono);
-    font-size: 11px;
-  }
-
-  /* RIGHT PANEL */
-  .right-panel {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    background: var(--surface);
-  }
-
-  .right-panel::-webkit-scrollbar { width: 4px; }
-  .right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .controls-section {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .ctrl-title {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .ctrl-group {
-    margin-bottom: 18px;
-  }
-
-  .ctrl-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .ctrl-label .ctrl-val {
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .ctrl-name {
-    font-size: 11px;
-    color: var(--text);
-    font-weight: 500;
-    display: block;
-    margin-bottom: 2px;
-    font-family: var(--sans);
-  }
-
-  .ctrl-desc {
-    font-size: 10px;
-    color: var(--text-faint);
-    margin-bottom: 8px;
-    line-height: 1.5;
-  }
-
-  input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 3px;
-    background: var(--surface3);
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-    margin-bottom: 2px;
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: var(--accent);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: transform 0.15s;
-  }
-
-  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
-
-  .dual-input {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .num-input-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .num-input-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text-faint);
-    letter-spacing: 0.08em;
-  }
-
-  input[type="number"] {
-    background: var(--surface3);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 6px 8px;
-    border-radius: 3px;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  input[type="number"]:focus { border-color: var(--accent); }
-
-  .run-btn {
-    width: 100%;
-    padding: 10px;
-    background: rgba(74,240,160,0.1);
-    border: 1px solid rgba(74,240,160,0.3);
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.15s;
-    margin-top: 8px;
-    text-transform: uppercase;
-  }
-
-  .run-btn:hover {
-    background: rgba(74,240,160,0.18);
-    border-color: var(--accent);
-  }
-
-  .run-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  /* BOTTOM / DETAIL PANEL */
-  .detail-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--accent);
-    z-index: 50;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    max-height: 60vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .detail-panel.open { transform: translateY(0); }
-
-  .detail-header {
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--surface2);
-    flex-shrink: 0;
-  }
-
-  .detail-primer-id {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .detail-primer-seq {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    letter-spacing: 0.06em;
-  }
-
-  .detail-close {
-    margin-left: auto;
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 10px;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: all 0.15s;
-  }
-
-  .detail-close:hover {
-    border-color: var(--accent4);
-    color: var(--accent4);
-  }
-
-  .detail-body {
-    overflow-y: auto;
-    flex: 1;
-    padding: 16px 20px;
-  }
-
-  .detail-body::-webkit-scrollbar { width: 4px; }
-  .detail-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .detail-card {
-    background: var(--surface3);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 12px 14px;
-  }
-
-  .detail-card-title {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .detail-card-value {
-    font-family: var(--mono);
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--accent2);
-    margin-bottom: 2px;
-  }
-
-  .detail-card-sub {
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
-  /* Locus conservation chart */
-  .locus-chart {
-    margin-bottom: 16px;
-  }
-
-  .locus-chart-title {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .locus-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 60px;
-    padding-bottom: 24px;
-    position: relative;
-  }
-
-  .locus-bar-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    height: 100%;
-    position: relative;
-  }
-
-  .locus-bar {
-    width: 100%;
-    min-width: 6px;
-    border-radius: 1px 1px 0 0;
-    transition: opacity 0.2s;
-    cursor: default;
-    position: absolute;
-    bottom: 24px;
-  }
-
-  .locus-bar-pos {
-    position: absolute;
-    bottom: 0;
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--text-faint);
-    white-space: nowrap;
-    transform: rotate(-60deg) translateX(-6px);
-    transform-origin: top left;
-    line-height: 1;
-  }
-
-  .locus-threshold-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: rgba(240,160,74,0.5);
-    pointer-events: none;
-  }
-
-  /* Variant table */
-  .variant-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 11px;
-    margin-top: 6px;
-  }
-
-  .variant-table th {
-    text-align: left;
-    padding: 5px 10px;
-    background: var(--surface3);
-    color: var(--text-faint);
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .variant-table td {
-    padding: 5px 10px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .variant-table tr:hover td { background: var(--surface3); }
-
-  .variant-pct-bar {
-    display: inline-block;
-    height: 6px;
-    background: var(--accent3);
-    border-radius: 1px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .expand-variants-btn {
-    background: none;
-    border: none;
-    color: var(--accent2);
-    font-family: var(--mono);
-    font-size: 10px;
-    cursor: pointer;
-    padding: 4px 0;
-    text-decoration: underline;
-    letter-spacing: 0.06em;
-  }
-
-  /* Status line */
-  .status-bar {
-    padding: 6px 20px;
-    background: var(--surface2);
-    border-top: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-faint);
-    display: flex;
-    gap: 16px;
-    flex-shrink: 0;
-  }
-
-  .status-item { display: flex; gap: 5px; }
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text-faint);
-    margin-top: 2px;
-    flex-shrink: 0;
-  }
-  .status-dot.green { background: var(--accent); }
-  .status-dot.yellow { background: var(--accent3); }
-  .status-dot.blue { background: var(--accent2); }
-
-  /* Divider */
-  .section-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0;
-  }
-
-  .cand-len {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-faint);
-    min-width: 30px;
-  }
-
-  /* Scroll track on seq display when primer hovered */
-  .seq-row .base-highlight { position: relative; }
-
-  .toast {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: var(--surface2);
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 8px 16px;
-    border-radius: 3px;
-    z-index: 100;
-    transform: translateX(120%);
-    transition: transform 0.3s;
-  }
-  .toast.show { transform: translateX(0); }
-  .toast.err { border-color: var(--accent4); color: var(--accent4); }
+:root {
+  --bg: #0d0f14;
+  --surface: #13161e;
+  --surface2: #1a1e2a;
+  --surface3: #222736;
+  --border: #2a3045;
+  --border-bright: #3d4d6a;
+  --accent: #4af0a0;
+  --accent2: #4ab8f0;
+  --accent3: #f0a04a;
+  --accent4: #f04a7a;
+  --text: #d0dcea;
+  --text-dim: #7a8aaa;
+  --text-faint: #3a4a60;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --right-width: 360px;
+  --candidates-height: 260px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+header {
+  position: relative;
+  z-index: 10;
+  padding: 18px 28px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  background: rgba(13,15,20,0.95);
+  backdrop-filter: blur(8px);
+}
+
+header h1 {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+header span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent2);
+  background: rgba(74,184,240,0.08);
+  border: 1px solid rgba(74,184,240,0.2);
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+}
+
+.main-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) 6px minmax(280px, var(--right-width));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  height: calc(100vh - 54px);
+  overflow: hidden;
+}
+
+/* LEFT PANEL */
+.left-panel {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.panel-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.panel-label.active { color: var(--accent); }
+
+/* Upload zone */
+.upload-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1.5px dashed var(--border);
+  margin: 20px;
+  border-radius: 4px;
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(74,240,160,0.03);
+}
+
+.upload-icon {
+  font-size: 36px;
+  margin-bottom: 14px;
+  opacity: 0.6;
+}
+
+.upload-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.upload-sub {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Sequence display */
+.seq-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.seq-meta {
+  padding: 8px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.seq-meta-item {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.seq-meta-item strong { color: var(--accent); }
+
+.seq-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.seq-scroll::-webkit-scrollbar { width: 4px; }
+.seq-scroll::-webkit-scrollbar-track { background: transparent; }
+.seq-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.seq-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+  align-items: baseline;
+}
+
+.seq-locus {
+  color: var(--text-faint);
+  font-size: 10px;
+  min-width: 42px;
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.seq-bases {
+  color: var(--text);
+  letter-spacing: 0.08em;
+  word-break: break-all;
+}
+
+.seq-bases .base-A { color: #5de8a8; }
+.seq-bases .base-T { color: #f07a5a; }
+.seq-bases .base-G { color: #5ab4f0; }
+.seq-bases .base-C { color: #e0c04a; }
+.seq-bases .base-gap { color: var(--text-faint); }
+
+.seq-trimmed-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--accent3);
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.seq-trimmed-note:hover { text-decoration: underline; }
+
+/* Primer highlight */
+.base-highlight {
+  background: rgba(74,240,160,0.18);
+  border-bottom: 2px solid var(--accent);
+  border-radius: 1px;
+  cursor: pointer;
+}
+
+/* Candidate list */
+.candidates-section {
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  height: var(--candidates-height);
+  max-height: 70%;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.candidates-section .panel-header { background: var(--surface2); }
+
+.candidates-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.candidates-list::-webkit-scrollbar { width: 4px; }
+.candidates-list::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.candidate-item {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.15s;
+}
+
+.candidate-item:hover { background: var(--surface2); }
+.candidate-item.active { background: rgba(74,240,160,0.06); border-left: 2px solid var(--accent); }
+
+.cand-pos {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  min-width: 70px;
+}
+
+.cand-seq {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cand-score {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 48px;
+  text-align: right;
+}
+
+.score-bar-wrap {
+  width: 60px;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.no-candidates {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--surface);
+}
+
+.right-panel::-webkit-scrollbar { width: 4px; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.controls-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ctrl-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ctrl-group {
+  margin-bottom: 18px;
+}
+
+.ctrl-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ctrl-label .ctrl-val {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ctrl-name {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--sans);
+}
+
+.ctrl-desc {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--surface3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+.dual-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.num-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.num-input-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-faint);
+  letter-spacing: 0.08em;
+}
+
+input[type="number"] {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 3px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input[type="number"]:focus { border-color: var(--accent); }
+
+.run-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(74,240,160,0.1);
+  border: 1px solid rgba(74,240,160,0.3);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+.run-btn:hover {
+  background: rgba(74,240,160,0.18);
+  border-color: var(--accent);
+}
+
+.run-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* BOTTOM / DETAIL PANEL */
+.detail-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--accent);
+  z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-panel.open { transform: translateY(0); }
+
+.detail-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+
+.detail-primer-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.detail-primer-seq {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  letter-spacing: 0.06em;
+}
+
+.detail-close {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.detail-close:hover {
+  border-color: var(--accent4);
+  color: var(--accent4);
+}
+
+.detail-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 16px 20px;
+}
+
+.detail-body::-webkit-scrollbar { width: 4px; }
+.detail-body::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-card {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.detail-card-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.detail-card-value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent2);
+  margin-bottom: 2px;
+}
+
+.detail-card-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.locus-chart { margin-bottom: 16px; }
+
+.locus-chart-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.locus-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 60px;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+.locus-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+.locus-bar {
+  width: 100%;
+  min-width: 6px;
+  border-radius: 1px 1px 0 0;
+  transition: opacity 0.2s;
+  cursor: default;
+  position: absolute;
+  bottom: 24px;
+}
+
+.locus-bar-pos {
+  position: absolute;
+  bottom: 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  transform: rotate(-60deg) translateX(-6px);
+  transform-origin: top left;
+  line-height: 1;
+}
+
+.locus-threshold-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(240,160,74,0.5);
+  pointer-events: none;
+}
+
+.variant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.variant-table th {
+  text-align: left;
+  padding: 5px 10px;
+  background: var(--surface3);
+  color: var(--text-faint);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.variant-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.variant-table tr:hover td { background: var(--surface3); }
+
+.variant-pct-bar {
+  display: inline-block;
+  height: 6px;
+  background: var(--accent3);
+  border-radius: 1px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.expand-variants-btn {
+  background: none;
+  border: none;
+  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: underline;
+  letter-spacing: 0.06em;
+}
+
+.dominant-panel {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.chart-drop-zone.drag-over {
+  background: rgba(74,240,160,0.035);
+  box-shadow: inset 0 0 0 1px rgba(74,240,160,0.4);
+}
+
+.dominant-panel.no-data .dominant-y-axis,
+.dominant-panel.no-data .dominant-x-axis,
+.dominant-panel.no-data .dominant-positions {
+  display: none;
+}
+
+.dominant-panel.no-data .dominant-chart-wrap {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 18px;
+}
+
+.dominant-panel.no-data .dominant-chart-scroll {
+  padding-bottom: 0;
+}
+
+.dominant-panel.no-data .dominant-grid {
+  height: 100%;
+  border: 1.5px dashed var(--border);
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+}
+
+.dominant-toolbar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dominant-threshold-control,
+.dominant-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.dominant-threshold-control input[type="range"] {
+  width: 220px;
+  margin: 0;
+  background: var(--surface3);
+}
+
+.dominant-threshold-control input[type="text"] {
+  min-width: 54px;
+  width: 88px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  letter-spacing: 0;
+  text-transform: none;
+  outline: none;
+}
+
+.dominant-threshold-control input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.dominant-check input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
+.dominant-separator {
+  align-self: stretch;
+  width: 1px;
+  background: var(--border);
+}
+
+#fileInput { display: none; }
+
+.dominant-chart-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  padding: 18px 18px 10px 14px;
+}
+
+.dominant-y-axis {
+  position: relative;
+  height: auto;
+  min-height: 0;
+  padding: 0 14px 30px 0;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: visible;
+}
+
+.dominant-y-axis span {
+  position: static;
+  transform: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.dominant-y-axis em {
+  position: absolute;
+  left: 2px;
+  top: calc(50% - 15px);
+  transform: rotate(-90deg) translateY(-50%);
+  transform-origin: left top;
+  color: var(--text-faint);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.dominant-chart-scroll {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: 10px;
+  user-select: none;
+}
+
+.dominant-chart-scroll::-webkit-scrollbar { height: 10px; }
+.dominant-chart-scroll::-webkit-scrollbar-track { background: var(--surface); border-radius: 999px; }
+.dominant-chart-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 999px; }
+
+.dominant-grid {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  min-width: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--bar-gap, 3px);
+  padding: 0 0 1px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background:
+    repeating-linear-gradient(to bottom, rgba(42,48,69,0.55) 0 1px, transparent 1px 52px);
+}
+
+.dominant-bar {
+  position: relative;
+  min-width: var(--bar-width, 20px);
+  flex: 0 0 var(--bar-width, 20px);
+  opacity: 0.24;
+  border-radius: 1px 1px 0 0;
+  cursor: crosshair;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 18px;
+  overflow: hidden;
+}
+
+.panel-splitter {
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+  z-index: 5;
+}
+
+.panel-splitter:hover,
+.panel-splitter.dragging {
+  background: var(--accent);
+}
+
+.vertical-splitter {
+  grid-column: 2;
+  grid-row: 1;
+  cursor: col-resize;
+}
+
+.horizontal-splitter {
+  height: 6px;
+  cursor: row-resize;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(0,0,0,0.25);
+}
+
+.dominant-bar.above {
+  opacity: 0.82;
+  box-shadow: none;
+}
+
+.dominant-bar.primer-hover {
+  opacity: 1;
+  outline: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px rgba(74,240,160,0.35), 0 0 12px rgba(74,240,160,0.18);
+  z-index: 2;
+}
+
+.dominant-bar span {
+  position: sticky;
+  top: 0;
+  display: block;
+  padding-top: 2px;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+}
+
+.dominant-bar.below {
+  background: #3b4250 !important;
+  color: var(--text-faint);
+}
+
+.dominant-x-axis {
+  min-width: 100%;
+  height: 20px;
+  display: flex;
+  gap: var(--bar-gap, 3px);
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dominant-x-tick {
+  min-width: var(--bar-width, 20px);
+  flex: 0 0 var(--bar-width, 20px);
+  text-align: center;
+}
+
+.dominant-selection {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 30px;
+  border: 1px solid rgba(74,240,160,0.7);
+  background: rgba(74,240,160,0.14);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.dominant-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 220;
+  background: rgba(13,15,20,0.96);
+  color: var(--text);
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  padding: 10px 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.42);
+  pointer-events: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.8;
+  min-width: 128px;
+}
+
+.dominant-tooltip b { color: var(--accent); }
+
+.dominant-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dominant-tip-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.dominant-footer {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 18px 14px;
+  color: var(--text-dim);
+  font-size: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.legend-swatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatch-A { background: #147a43; }
+.swatch-T { background: #a8333c; }
+.swatch-C { background: #2e609f; }
+.swatch-G { background: #a58900; }
+.swatch-low { background: #3b4250; border: 1px solid var(--border-bright); }
+
+.dominant-muted { color: var(--text-faint); }
+
+.dominant-empty {
+  width: 100%;
+  align-self: stretch;
+  margin: auto;
+  color: var(--text-faint);
+  text-align: center;
+  font-size: 14px;
+  font-family: var(--mono);
+  pointer-events: none;
+}
+
+.dominant-positions {
+  display: none;
+  margin-left: auto;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.dominant-pos-list {
+  display: none;
+}
+
+.dominant-pos {
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 1px 4px;
+  background: rgba(255,255,255,0.03);
+}
+
+.dominant-more {
+  color: #999;
+}
+
+.status-bar {
+  padding: 6px 20px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.status-item { display: flex; gap: 5px; }
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.status-dot.green { background: var(--accent); }
+.status-dot.yellow { background: var(--accent3); }
+.status-dot.blue { background: var(--accent2); }
+
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.cand-len {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  min-width: 30px;
+}
+
+.seq-row .base-highlight { position: relative; }
+
+.toast {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 8px 16px;
+  border-radius: 3px;
+  z-index: 100;
+  transform: translateX(120%);
+  transition: transform 0.3s;
+}
+.toast.show { transform: translateX(0); }
+.toast.err { border-color: var(--accent4); color: var(--accent4); }
+
 </style>
 </head>
 <body>
@@ -769,62 +1127,57 @@
 </header>
 
 <div class="main-layout">
-
   <!-- LEFT PANEL -->
   <div class="left-panel" id="leftPanel">
 
-    <!-- Upload state -->
     <div id="uploadState" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
       <div class="panel-header">
         <span class="panel-label" id="seqLabel">ALIGNMENT INPUT</span>
+        <span class="seq-meta-item">Seq: <strong id="nSeqDisplay">—</strong></span>
+        <span class="seq-meta-item">Len: <strong id="lenDisplay">—</strong></span>
         <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint);" id="seqInfo"></span>
       </div>
-      <!-- Upload zone (visible when no file) -->
-      <div id="uploadZone" class="upload-zone" style="position:relative;">
-        <div class="upload-icon">⊕</div>
-        <div class="upload-title">Drop FASTA / click to upload</div>
-        <div class="upload-sub">BLAST-aligned multi-FASTA format</div>
-        <!-- Input overlays entire zone - most reliable cross-browser method -->
-        <input type="file" id="fileInput" accept=".fasta,.fa,.txt,.aln"
-          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;">
-      </div>
-      <!-- Sequence display (hidden until file loaded) -->
-      <div id="seqDisplayWrap" class="seq-display" style="display:none;">
-        <div class="seq-meta" style="flex-wrap:wrap;gap:6px 14px;padding:6px 16px;">
-          <span class="seq-meta-item">Seq: <strong id="nSeqDisplay">—</strong></span>
-          <span class="seq-meta-item">Len: <strong id="lenDisplay">—</strong></span>
-          <span class="seq-meta-item" id="trimNote" style="cursor:pointer;color:var(--accent3);font-size:10px;display:none;" onclick="toggleFullSeq()">▶ Expand</span>
-          <span style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
-              FONT
-              <input type="range" id="seqFontSlider" min="10" max="22" step="1" value="14"
-                style="width:55px;margin:0;" oninput="applySeqDisplay()">
-              <span id="seqFontVal" style="color:var(--accent);min-width:18px;">14</span>px
-            </label>
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;cursor:pointer;">
-              <input type="checkbox" id="colorBasesCb" checked onchange="applySeqDisplay()" style="accent-color:var(--accent);cursor:pointer;">
-              A/T/G/C
-            </label>
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
-              LABEL/
-              <select id="labelIntervalSel" onchange="applySeqDisplay()"
-                style="background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:2px;cursor:pointer;">
-                <option value="5">5 nt</option>
-                <option value="10" selected>10 nt</option>
-                <option value="20">20 nt</option>
-                <option value="50">50 nt</option>
-              </select>
-            </label>
-          </span>
+
+      <div id="uploadZone" class="dominant-panel chart-drop-zone no-data">
+        <div class="dominant-toolbar">
+          <label class="dominant-threshold-control">
+            <span>Threshold</span>
+            <input type="range" id="dominantThresholdSlider" min="0" max="1" step="0.001" value="0.500" oninput="syncDominantThreshold(this.value)">
+            <input type="text" id="dominantThresholdVal" value="0.900" inputmode="decimal" onkeydown="handleDominantThresholdKey(event)" onchange="syncDominantThresholdInput(this.value)">
+          </label>
+          <input type="file" id="fileInput" accept=".fasta,.fa,.txt,.aln">
         </div>
-        <div class="seq-scroll" id="seqScroll">
-          <!-- sequence content rendered here -->
+
+        <div class="dominant-chart-wrap">
+          <div class="dominant-y-axis">
+            <span id="dominantY100">100%</span>
+            <span id="dominantY80">80%</span>
+            <span id="dominantY60">60%</span>
+            <span id="dominantY40">40%</span>
+            <span id="dominantY20">20%</span>
+            <span id="dominantY0">0%</span>
+            <em>Dominant base %</em>
+          </div>
+          <div class="dominant-chart-scroll" id="dominantChartScroll">
+            <div class="dominant-grid" id="dominantHist">
+              <div class="dominant-empty">
+                <div class="upload-icon">⊕</div>
+                <div class="upload-title">Drop FASTA here</div>
+                <div class="upload-sub">Dominant base probabilities render immediately after upload</div>
+              </div>
+            </div>
+            <div class="dominant-selection" id="dominantSelection"></div>
+            <div class="dominant-x-axis" id="dominantXAxis"></div>
+          </div>
+          <div class="dominant-tooltip" id="dominantTooltip"></div>
         </div>
+        <span class="dominant-positions" id="dominantPositions">No analysis yet</span>
       </div>
     </div>
 
-    <!-- Candidate list -->
-    <div class="candidates-section" id="candidatesSection" style="display:none;">
+    <div class="panel-splitter horizontal-splitter" id="candidateSplitter"></div>
+
+    <div class="candidates-section" id="candidatesSection">
       <div class="panel-header" style="background:var(--surface2);">
         <span class="panel-label active">PRIMER CANDIDATES</span>
         <span id="candidateCount" style="margin-left:8px;font-family:var(--mono);font-size:10px;color:var(--accent);"></span>
@@ -836,6 +1189,8 @@
     </div>
 
   </div>
+
+  <div class="panel-splitter vertical-splitter" id="mainSplitter"></div>
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
@@ -881,7 +1236,6 @@
       <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>▶ Run Analysis</button>
     </div>
 
-    <!-- Stats after run -->
     <div class="controls-section" id="statsSection" style="display:none;">
       <div class="ctrl-title">Run Summary</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9;" id="runSummary"></div>
@@ -899,14 +1253,11 @@
 <!-- Detail panel -->
 <div class="detail-panel" id="detailPanel">
   <div class="detail-header" id="detailHeader" style="flex-direction:column;gap:0;padding:0;">
-    <!-- Row 1: id, stats chips, close -->
     <div style="display:flex;align-items:center;gap:12px;padding:10px 16px 6px;flex-wrap:wrap;">
       <span class="detail-primer-id" id="detailId">—</span>
-      <!-- Stats chips injected here by JS -->
       <span id="detailChips" style="display:flex;gap:8px;flex-wrap:wrap;"></span>
       <button class="detail-close" onclick="closeDetail()" style="margin-left:auto;">✕ Close</button>
     </div>
-    <!-- Row 2: plasma sequence track (injected by JS) -->
     <div id="detailTrackRow" style="padding:0 16px 8px;position:relative;">
       <div id="locusTooltip" style="
         display:none;position:fixed;z-index:200;
@@ -929,57 +1280,28 @@
       <div id="detailRuler" style="display:flex;gap:1px;font-family:var(--mono);font-size:9px;color:var(--text-faint);margin-top:2px;"></div>
     </div>
   </div>
-  <div class="detail-body" id="detailBody" style="padding-top:8px;">
-  </div>
+  <div class="detail-body" id="detailBody" style="padding-top:8px;"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── STATE ───────────────────────────────────────────────────────────────────
-let state = {
-  sequences: [],        // array of {name, seq} — trimmed to consensus columns
-  consensusSeq: '',     // consensus for display
-  seqLen: 0,
-  jsdScores: [],        // raw per-position JSD [0-1]
-  windowedScores: [],   // window-smoothed per-position [0-1]
-  candidates: [],       // filtered primers
-  showFull: false,
-  activeCandidate: null,
-  k: 0.60,
-  c: 0.70,
-  minLen: 18,
-  maxLen: 24,
-  TRIM_LIMIT: 500,
-  WINDOW: 3,
-  LAMBDA_JSD: 0.5,
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+// Default parameters (mirrors config.json)
+const CONFIG = {
+  k:          0.60,
+  c:          0.70,
+  dominantThreshold: 0.900,
+  minLen:     18,
+  maxLen:     24,
+  window:     3,
+  lambdaJSD:  0.5,
+  trimLimit:  500,
 };
 
-// ── HELPERS ─────────────────────────────────────────────────────────────────
-function toast(msg, err=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (err ? ' err' : '');
-  setTimeout(() => { t.className = 'toast'; }, 2500);
-}
+const BASES = ['A', 'T', 'G', 'C'];
 
-function setStatus(msg, color='') {
-  document.getElementById('statusMsg').textContent = msg;
-  const dot = document.getElementById('statusDot');
-  dot.className = 'status-dot' + (color ? ` ${color}` : '');
-}
-
-function syncK(v) {
-  state.k = parseFloat(v);
-  document.getElementById('kVal').textContent = parseFloat(v).toFixed(2);
-}
-
-function syncC(v) {
-  state.c = parseFloat(v);
-  document.getElementById('cVal').textContent = parseFloat(v).toFixed(2);
-}
-
-// ── FILE PARSING ─────────────────────────────────────────────────────────────
+// ── FASTA PARSING ────────────────────────────────────────────────────────────
 function parseFASTA(text) {
   const seqs = [];
   let cur = null;
@@ -997,6 +1319,53 @@ function parseFASTA(text) {
   return seqs;
 }
 
+function reverseComplement(seq) {
+  const comp = { A: 'T', T: 'A', G: 'C', C: 'G', N: 'N', '-': '-', '.': '.' };
+  let out = '';
+  for (let i = seq.length - 1; i >= 0; i--) out += comp[seq[i]] || 'N';
+  return out;
+}
+
+function alignedIdentity(refSeq, querySeq) {
+  const L = Math.min(refSeq.length, querySeq.length);
+  let matches = 0;
+  let compared = 0;
+  for (let i = 0; i < L; i++) {
+    const r = refSeq[i];
+    const q = querySeq[i];
+    if (!BASES.includes(r) || !BASES.includes(q)) continue;
+    compared++;
+    if (r === q) matches++;
+  }
+  return { identity: compared ? matches / compared : 0, compared };
+}
+
+function orientSequencesToReference(seqs, minDelta = 0.05) {
+  if (seqs.length < 2) return { seqs, flipped: [] };
+
+  const refSeq = seqs[0].seq;
+  const flipped = [];
+  const oriented = seqs.map((s, idx) => {
+    if (idx === 0) return { ...s, orientation: 'reference' };
+
+    const forward = alignedIdentity(refSeq, s.seq);
+    const rcSeq = reverseComplement(s.seq);
+    const reverse = alignedIdentity(refSeq, rcSeq);
+    const shouldFlip = reverse.compared >= 8 && reverse.identity > forward.identity + minDelta;
+
+    if (!shouldFlip) return { ...s, orientation: 'forward' };
+
+    flipped.push({
+      name: s.name,
+      forwardIdentity: forward.identity,
+      reverseIdentity: reverse.identity,
+    });
+    return { ...s, seq: rcSeq, orientation: 'reverse-complement' };
+  });
+
+  return { seqs: oriented, flipped };
+}
+
 function buildConsensus(seqs) {
   if (!seqs.length) return '';
   const L = seqs[0].seq.length;
@@ -1005,96 +1374,214 @@ function buildConsensus(seqs) {
     const cnt = {};
     for (const s of seqs) {
       const b = s.seq[i] || '-';
-      if (b !== '-' && b !== '.') cnt[b] = (cnt[b]||0)+1;
+      if (b !== '-' && b !== '.') cnt[b] = (cnt[b] || 0) + 1;
     }
-    const entries = Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+    const entries = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
     consensus += entries.length ? entries[0][0] : '-';
   }
   return consensus;
 }
 
-// ── JSD COMPUTATION ─────────────────────────────────────────────────────────
+// ── JSD COMPUTATION ──────────────────────────────────────────────────────────
 function entropy(p) {
-  // p: array of frequencies
-  return -p.reduce((s, pi) => {
-    if (pi <= 0) return s;
-    return s + pi * Math.log2(pi);
-  }, 0);
+  return -p.reduce((s, pi) => (pi <= 0 ? s : s + pi * Math.log2(pi)), 0);
 }
 
-function jsdColumn(colFreqs, bgFreq) {
-  // colFreqs: {A, T, G, C} normalized; bgFreq uniform {A:0.25, T:0.25, G:0.25, C:0.25}
-  const lam = state.LAMBDA_JSD;
-  const bases = ['A','T','G','C'];
-  const r = bases.map(b => lam * (colFreqs[b]||0) + (1-lam) * (bgFreq[b]||0.25));
-  const Hr = entropy(r);
-  const Hpc = entropy(bases.map(b => colFreqs[b]||0));
-  const Hq  = entropy(bases.map(b => bgFreq[b]||0.25));
-  const jsd = Hr - (lam * Hpc + (1-lam) * Hq);
-  // jsd in [0,1] when using log2 and background = uniform; max is 1
-  return Math.max(0, Math.min(1, jsd));
+function jsdColumn(colFreqs, bgFreq, lambda) {
+  const bases = ['A', 'T', 'G', 'C'];
+  const r   = bases.map(b => lambda * (colFreqs[b] || 0) + (1 - lambda) * (bgFreq[b] || 0.25));
+  const Hr  = entropy(r);
+  const Hpc = entropy(bases.map(b => colFreqs[b] || 0));
+  const Hq  = entropy(bases.map(b => bgFreq[b]   || 0.25));
+  return Math.max(0, Math.min(1, Hr - (lambda * Hpc + (1 - lambda) * Hq)));
 }
 
-function computeJSD(seqs) {
+function computeJSD(seqs, windowSize, lambda) {
   const L = seqs[0].seq.length;
-  const bgFreq = {A:0.25, T:0.25, G:0.25, C:0.25};
+  const bgFreq = { A: 0.25, T: 0.25, G: 0.25, C: 0.25 };
   const raw = [];
-  const gapFracs = [];
   const colDistribs = [];
 
   for (let i = 0; i < L; i++) {
-    const cnt = {A:0,T:0,G:0,C:0};
+    const cnt = { A: 0, T: 0, G: 0, C: 0 };
     let ngap = 0;
     for (const s of seqs) {
       const b = s.seq[i] || '-';
       if (b === '-' || b === '.') ngap++;
-      else if (cnt.hasOwnProperty(b)) cnt[b]++;
+      else if (Object.prototype.hasOwnProperty.call(cnt, b)) cnt[b]++;
     }
-    const nvalid = seqs.length - ngap;
+    const nvalid  = seqs.length - ngap;
     const gapFrac = ngap / seqs.length;
-    gapFracs.push(gapFrac);
 
-    const freq = {A:0,T:0,G:0,C:0};
+    const freq = { A: 0, T: 0, G: 0, C: 0 };
     if (nvalid > 0) {
-      for (const b of ['A','T','G','C']) freq[b] = cnt[b] / nvalid;
+      for (const b of BASES) freq[b] = cnt[b] / nvalid;
     }
-    colDistribs.push({ freq, cnt: {...cnt}, nvalid, gapFrac });
+    colDistribs.push({ freq, cnt: { ...cnt }, nvalid, gapFrac });
 
-    // gap penalty: multiply by fraction of non-gaps; skip if >30% gaps
     let score = 0;
     if (gapFrac <= 0.7) {
-      score = jsdColumn(freq, bgFreq) * (1 - gapFrac);
+      score = jsdColumn(freq, bgFreq, lambda) * (1 - gapFrac);
     }
     raw.push(score);
   }
 
-  // Window smoothing: score_w(i) = 0.5 * raw(i) + 0.5 * mean(window)
-  const W = state.WINDOW;
+  // Window smoothing: 0.5 * raw(i) + 0.5 * mean(window around i)
+  const W = windowSize;
   const windowed = [];
   for (let i = 0; i < L; i++) {
     const lo = Math.max(0, i - W);
-    const hi = Math.min(L-1, i + W);
+    const hi = Math.min(L - 1, i + W);
     let sum = 0, n = 0;
     for (let j = lo; j <= hi; j++) { sum += raw[j]; n++; }
     windowed.push(0.5 * raw[i] + 0.5 * (sum / n));
   }
 
-  // Normalize windowed to [0,1]
+  // Normalize to [0, 1]
   const mx = Math.max(...windowed, 1e-9);
   const normed = windowed.map(v => v / mx);
 
   return { raw, windowed: normed, colDistribs };
 }
 
-// 3'-weighted primer suitability from windowed scores
+function dominantBaseStats(colDistribs) {
+  return colDistribs.map((col, idx) => {
+    const entries = BASES.map(base => ({
+      base,
+      prob: col.freq[base] || 0,
+      count: col.cnt[base] || 0,
+    })).sort((a, b) => b.prob - a.prob);
+    return { pos: idx + 1, ...entries[0], nvalid: col.nvalid, gapFrac: col.gapFrac };
+  });
+}
+
+// 3'-weighted primer suitability score
 function primerScore(winScores, start, len) {
   let weightedSum = 0, totalWeight = 0;
   for (let i = 0; i < len; i++) {
-    const w = (i + 1); // increases toward 3' end
+    const w = i + 1; // increases toward 3' end
     weightedSum += w * winScores[start + i];
     totalWeight += w;
   }
   return weightedSum / totalWeight;
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  sequences:      [],
+  consensusSeq:   '',
+  seqLen:         0,
+  jsdScores:      [],
+  windowedScores: [],
+  colDistribs:    [],
+  dominantStats:  [],
+  candidates:     [],
+  showFull:       false,
+  activeCandidate: null,
+  orientationStats: { flipped: [] },
+  dominantZoom: { start: 1, end: null, barWidth: null },
+  hoveredCandidate: null,
+  k:          CONFIG.k,
+  c:          CONFIG.c,
+  dominantThreshold: CONFIG.dominantThreshold,
+  minLen:     CONFIG.minLen,
+  maxLen:     CONFIG.maxLen,
+  TRIM_LIMIT: CONFIG.trimLimit,
+  WINDOW:     CONFIG.window,
+  LAMBDA_JSD: CONFIG.lambdaJSD,
+};
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function toast(msg, err = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+function setStatus(msg, color = '') {
+  document.getElementById('statusMsg').textContent = msg;
+  document.getElementById('statusDot').className = 'status-dot' + (color ? ` ${color}` : '');
+}
+
+function syncK(v) {
+  state.k = parseFloat(v);
+  document.getElementById('kVal').textContent = parseFloat(v).toFixed(2);
+}
+
+function syncC(v) {
+  state.c = parseFloat(v);
+  document.getElementById('cVal').textContent = parseFloat(v).toFixed(2);
+}
+
+const DOMINANT_THRESHOLD_MIN = 0.1;
+const DOMINANT_THRESHOLD_MAX = 0.9999999;
+const DOMINANT_THRESHOLD_MAX_GAP = 1 - DOMINANT_THRESHOLD_MAX;
+const DOMINANT_THRESHOLD_MIN_GAP = 1 - DOMINANT_THRESHOLD_MIN;
+
+function sliderToDominantThreshold(v) {
+  const x = Math.max(0, Math.min(1, parseFloat(v)));
+  const gap = DOMINANT_THRESHOLD_MIN_GAP *
+    Math.pow(DOMINANT_THRESHOLD_MAX_GAP / DOMINANT_THRESHOLD_MIN_GAP, x);
+  return 1 - gap;
+}
+
+function dominantThresholdToSlider(threshold) {
+  const t = Math.max(DOMINANT_THRESHOLD_MIN, Math.min(DOMINANT_THRESHOLD_MAX, parseFloat(threshold)));
+  const gap = 1 - t;
+  return Math.max(0, Math.min(1,
+    Math.log(gap / DOMINANT_THRESHOLD_MIN_GAP) /
+    Math.log(DOMINANT_THRESHOLD_MAX_GAP / DOMINANT_THRESHOLD_MIN_GAP)
+  ));
+}
+
+function formatDominantThreshold(value) {
+  const t = Math.max(DOMINANT_THRESHOLD_MIN, Math.min(DOMINANT_THRESHOLD_MAX, value));
+  const gap = 1 - t;
+  if (gap < 0.001) return `1-${gap.toExponential(2)}`;
+  return t.toFixed(3);
+}
+
+function parseDominantThresholdInput(raw) {
+  const text = String(raw).trim().toLowerCase();
+  if (!text) return NaN;
+  const oneMinus = text.match(/^1\s*-\s*(.+)$/);
+  if (oneMinus) return 1 - Number(oneMinus[1]);
+  return Number(text);
+}
+
+function syncDominantThreshold(v) {
+  state.dominantThreshold = sliderToDominantThreshold(v);
+  document.getElementById('dominantThresholdVal').value = formatDominantThreshold(state.dominantThreshold);
+  renderDominantHistogram();
+}
+
+function syncDominantThresholdInput(raw) {
+  const parsed = parseDominantThresholdInput(raw);
+  if (!Number.isFinite(parsed)) {
+    document.getElementById('dominantThresholdVal').value = formatDominantThreshold(state.dominantThreshold);
+    toast('Invalid threshold', true);
+    return;
+  }
+  state.dominantThreshold = Math.max(DOMINANT_THRESHOLD_MIN, Math.min(DOMINANT_THRESHOLD_MAX, parsed));
+  document.getElementById('dominantThresholdSlider').value = dominantThresholdToSlider(state.dominantThreshold).toFixed(3);
+  document.getElementById('dominantThresholdVal').value = formatDominantThreshold(state.dominantThreshold);
+  renderDominantHistogram();
+}
+
+function handleDominantThresholdKey(e) {
+  if (e.key === 'Enter') e.currentTarget.blur();
+  if (e.key === 'Escape') {
+    e.currentTarget.value = formatDominantThreshold(state.dominantThreshold);
+    e.currentTarget.blur();
+  }
+}
+
+function resetDominantZoom() {
+  state.dominantZoom.start = 1;
+  state.dominantZoom.end = null;
+  state.dominantZoom.barWidth = null;
+  renderDominantHistogram();
 }
 
 // ── ANALYSIS ─────────────────────────────────────────────────────────────────
@@ -1113,55 +1600,51 @@ function runAnalysis() {
 
   setTimeout(() => {
     try {
-      const { raw, windowed, colDistribs } = computeJSD(state.sequences);
-      state.jsdScores = raw;
+      const { raw, windowed, colDistribs } = computeJSD(state.sequences, state.WINDOW, state.LAMBDA_JSD);
+      state.jsdScores      = raw;
       state.windowedScores = windowed;
-      state.colDistribs = colDistribs;
+      state.colDistribs    = colDistribs;
 
-      // Find all primers in length range with score >= k
       const L = state.seqLen;
       const primers = [];
       for (let len = state.minLen; len <= state.maxLen; len++) {
         for (let start = 0; start <= L - len; start++) {
           const s = primerScore(windowed, start, len);
-          if (s >= state.k) {
-            primers.push({ start, len, score: s });
-          }
+          if (s >= state.k) primers.push({ start, len, score: s });
         }
       }
 
-      // Sort by score descending, remove heavily overlapping (greedy)
-      primers.sort((a,b) => b.score - a.score);
+      primers.sort((a, b) => b.score - a.score);
       const kept = [];
-      const used = new Set();
       for (const p of primers) {
         let overlap = false;
         for (const k2 of kept) {
-          const ov = Math.min(p.start+p.len, k2.start+k2.len) - Math.max(p.start, k2.start);
+          const ov = Math.min(p.start + p.len, k2.start + k2.len) - Math.max(p.start, k2.start);
           if (ov > 0.5 * Math.min(p.len, k2.len)) { overlap = true; break; }
         }
-        if (!overlap) {
-          kept.push(p);
-          for (let j = p.start; j < p.start+p.len; j++) used.add(j);
-        }
+        if (!overlap) kept.push(p);
       }
 
       state.candidates = kept;
       renderCandidates();
       renderSeq();
 
-      const statsEl = document.getElementById('statsSection');
-      statsEl.style.display = 'block';
+      document.getElementById('statsSection').style.display = 'block';
+      const flippedCount = state.orientationStats.flipped.length;
       document.getElementById('runSummary').innerHTML =
         `Positions scored: <strong style="color:var(--accent)">${L}</strong><br>` +
         `Candidates found: <strong style="color:var(--accent)">${kept.length}</strong><br>` +
-        `Score range: <strong style="color:var(--accent)">${kept.length ? kept[kept.length-1].score.toFixed(3)+' – '+kept[0].score.toFixed(3) : '—'}</strong><br>` +
+        `Reverse-complement fixed: <strong style="color:var(--accent)">${flippedCount}</strong><br>` +
+        `Score range: <strong style="color:var(--accent)">${kept.length
+          ? kept[kept.length - 1].score.toFixed(3) + ' – ' + kept[0].score.toFixed(3) : '—'
+        }</strong><br>` +
         `Window size: <strong style="color:var(--accent)">±${state.WINDOW} nt</strong>`;
+      renderDominantHistogram();
 
       document.getElementById('threshDisplay').textContent = state.k.toFixed(2);
       document.getElementById('candidatesSection').style.display = 'flex';
       setStatus(`Analysis complete — ${kept.length} candidates`, 'green');
-    } catch(e) {
+    } catch (e) {
       toast('Analysis error: ' + e.message, true);
       setStatus('Analysis error', '');
     }
@@ -1171,8 +1654,8 @@ function runAnalysis() {
 // ── DISPLAY SETTINGS ─────────────────────────────────────────────────────────
 function getSeqDisplayOpts() {
   return {
-    fontSize: parseInt(document.getElementById('seqFontSlider')?.value || 14),
-    colorBases: document.getElementById('colorBasesCb')?.checked !== false,
+    fontSize:      parseInt(document.getElementById('seqFontSlider')?.value || 14),
+    colorBases:    document.getElementById('colorBasesCb')?.checked !== false,
     labelInterval: parseInt(document.getElementById('labelIntervalSel')?.value || 10),
   };
 }
@@ -1180,54 +1663,47 @@ function getSeqDisplayOpts() {
 function applySeqDisplay() {
   const opts = getSeqDisplayOpts();
   document.getElementById('seqFontVal').textContent = opts.fontSize;
-  // Update CSS var for seq font
   document.getElementById('seqScroll').style.fontSize = opts.fontSize + 'px';
-  // Re-render with new options
   renderSeq(state.activeCandidate);
 }
 
-// ── RENDERING ─────────────────────────────────────────────────────────────────
+// ── RENDERING ────────────────────────────────────────────────────────────────
 function colorBase(b, useColor) {
   if (!useColor) return b;
-  const cls = {A:'base-A', T:'base-T', G:'base-G', C:'base-C', '-':'base-gap', '.':'base-gap'}[b] || '';
+  const cls = { A: 'base-A', T: 'base-T', G: 'base-G', C: 'base-C', '-': 'base-gap', '.': 'base-gap' }[b] || '';
   return cls ? `<span class="${cls}">${b}</span>` : b;
 }
 
 const BASES_PER_ROW = 60;
 
-function renderSeq(highlightCand=null) {
+function renderSeq(highlightCand = null) {
   const seq = state.consensusSeq;
   if (!seq) return;
+  if (!document.getElementById('seqScroll')) return;
 
-  const opts = getSeqDisplayOpts();
-  const limit = state.showFull ? seq.length : Math.min(seq.length, state.TRIM_LIMIT);
-  const scroll = document.getElementById('seqScroll');
-  scroll.style.fontSize = opts.fontSize + 'px';
+  const opts     = getSeqDisplayOpts();
+  const limit    = state.showFull ? seq.length : Math.min(seq.length, state.TRIM_LIMIT);
+  const scroll   = document.getElementById('seqScroll');
+  scroll.style.fontSize   = opts.fontSize + 'px';
   scroll.style.lineHeight = '2';
 
-  // Build highlight set
   const hlSet = new Set();
   if (highlightCand) {
     for (let i = highlightCand.start; i < highlightCand.start + highlightCand.len; i++) hlSet.add(i);
   }
 
-  // Ruler label width: enough for the max position number
-  const maxPos = seq.length;
-  const labelW = maxPos.toString().length;
-
+  const labelW = seq.length.toString().length;
   let html = '';
+
   for (let rowStart = 0; rowStart < limit; rowStart += BASES_PER_ROW) {
     const rowEnd = Math.min(rowStart + BASES_PER_ROW, limit);
     const rowLen = rowEnd - rowStart;
 
-    // ── Ruler row: position ticks above the bases ──
-    // Build a character array the same width as the sequence
     const ruler = new Array(rowLen).fill(' ');
     for (let i = rowStart; i < rowEnd; i++) {
       const absPos = i + 1;
       if (absPos === 1 || absPos % opts.labelInterval === 0) {
         const label = String(absPos);
-        // Place label ending at this position (right-aligned to the base col)
         const relCol = i - rowStart;
         const labelStart = relCol - label.length + 1;
         for (let j = 0; j < label.length; j++) {
@@ -1236,48 +1712,44 @@ function renderSeq(highlightCand=null) {
         }
       }
     }
-    const rulerStr = ruler.join('');
 
-    // ── Sequence row ──
     let basesHtml = '';
     for (let i = rowStart; i < rowEnd; i++) {
-      const b = seq[i] || '-';
-      const isHL = hlSet.has(i);
+      const b     = seq[i] || '-';
+      const isHL  = hlSet.has(i);
       const inner = colorBase(b, opts.colorBases);
-      if (isHL) {
-        basesHtml += `<span class="base-highlight" data-pos="${i}">${inner}</span>`;
-      } else {
-        basesHtml += `<span data-pos="${i}">${inner}</span>`;
-      }
+      basesHtml += isHL
+        ? `<span class="base-highlight" data-pos="${i}">${inner}</span>`
+        : `<span data-pos="${i}">${inner}</span>`;
     }
 
     const lpad = String(rowStart + 1).padStart(labelW, ' ');
-
     html += `<div class="seq-row" style="align-items:baseline;">
       <span class="seq-locus" style="min-width:${labelW + 1}ch;font-size:0.8em;">${lpad}</span>
       <span class="seq-bases" style="white-space:pre;">${basesHtml}</span>
     </div>
     <div class="seq-ruler-row" style="display:flex;gap:12px;margin-bottom:2px;line-height:1;">
       <span style="min-width:${labelW + 1}ch;"></span>
-      <span style="font-family:var(--mono);font-size:0.65em;color:var(--text-faint);white-space:pre;letter-spacing:0;">${rulerStr}</span>
+      <span style="font-family:var(--mono);font-size:0.65em;color:var(--text-faint);white-space:pre;letter-spacing:0;">${ruler.join('')}</span>
     </div>`;
   }
 
   if (!state.showFull && seq.length > state.TRIM_LIMIT) {
     html += `<div class="seq-trimmed-note" onclick="toggleFullSeq()">▶ Showing first ${state.TRIM_LIMIT} nt of ${seq.length} — click to expand</div>`;
-    document.getElementById('trimNote').style.display = '';
-    document.getElementById('trimNote').textContent = '▶ Expand';
+    const tn = document.getElementById('trimNote');
+    tn.style.display = '';
+    tn.textContent = '▶ Expand';
   } else if (seq.length > state.TRIM_LIMIT) {
-    document.getElementById('trimNote').textContent = '▲ Collapse';
-    document.getElementById('trimNote').style.display = '';
+    const tn = document.getElementById('trimNote');
+    tn.textContent = '▲ Collapse';
+    tn.style.display = '';
   }
 
   scroll.innerHTML = html;
 
-  // Scroll to highlighted candidate
   if (highlightCand) {
     const targetRow = Math.floor(highlightCand.start / BASES_PER_ROW);
-    const rowEls = scroll.querySelectorAll('.seq-row');
+    const rowEls    = scroll.querySelectorAll('.seq-row');
     if (rowEls[targetRow]) rowEls[targetRow].scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
@@ -1288,7 +1760,7 @@ function toggleFullSeq() {
 }
 
 function renderCandidates() {
-  const list = document.getElementById('candidatesList');
+  const list    = document.getElementById('candidatesList');
   const countEl = document.getElementById('candidateCount');
   if (!state.candidates.length) {
     list.innerHTML = '<div class="no-candidates">No candidates above threshold</div>';
@@ -1296,18 +1768,250 @@ function renderCandidates() {
     return;
   }
   countEl.textContent = `${state.candidates.length} found`;
-
   list.innerHTML = state.candidates.map((c, idx) => {
-    const primerSeq = getPrimerSeq(c);
-    const scoreColor = scoreToColor(c.score);
-    return `<div class="candidate-item" id="cand-${idx}" onclick="selectCandidate(${idx})">
-      <span class="cand-pos">${c.start+1}–${c.start+c.len}</span>
+    const sc = scoreToColor(c.score);
+    return `<div class="candidate-item" id="cand-${idx}" onclick="selectCandidate(${idx})" onmouseenter="highlightCandidateBars(${idx})" onmouseleave="clearCandidateBarHighlight()">
+      <span class="cand-pos">${c.start + 1}–${c.start + c.len}</span>
       <span class="cand-len">${c.len}nt</span>
-      <span class="cand-seq">${primerSeq}</span>
-      <div class="score-bar-wrap"><div class="score-bar" style="width:${(c.score*100).toFixed(0)}%;background:${scoreColor};"></div></div>
-      <span class="cand-score" style="color:${scoreColor};">${c.score.toFixed(3)}</span>
+      <span class="cand-seq">${getPrimerSeq(c)}</span>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${(c.score * 100).toFixed(0)}%;background:${sc};"></div></div>
+      <span class="cand-score" style="color:${sc};">${c.score.toFixed(3)}</span>
     </div>`;
   }).join('');
+}
+
+function setHistogramCandidateHighlight(cand) {
+  document.querySelectorAll('.dominant-bar.primer-hover').forEach(el => el.classList.remove('primer-hover'));
+  if (!cand) return;
+  const lo = cand.start + 1;
+  const hi = cand.start + cand.len;
+  document.querySelectorAll('.dominant-bar').forEach(el => {
+    const pos = parseInt(el.dataset.pos, 10);
+    if (pos >= lo && pos <= hi) el.classList.add('primer-hover');
+  });
+}
+
+function highlightCandidateBars(idx) {
+  state.hoveredCandidate = state.candidates[idx] || null;
+  setHistogramCandidateHighlight(state.hoveredCandidate);
+}
+
+function clearCandidateBarHighlight() {
+  state.hoveredCandidate = null;
+  setHistogramCandidateHighlight(null);
+}
+
+function baseColor(base) {
+  return { A: '#147a43', T: '#a8333c', G: '#a58900', C: '#2e609f' }[base] || 'var(--text)';
+}
+
+function probToLogAxis(prob) {
+  const p = Math.max(0, Math.min(0.999999, prob));
+  return -Math.log10(1 - p);
+}
+
+function logAxisToProb(value) {
+  return Math.max(0, Math.min(0.999999, 1 - Math.pow(10, -value)));
+}
+
+function dominantHeight(prob, threshold, useLog) {
+  if (prob < threshold) return 0;
+  const lo = probToLogAxis(threshold);
+  const hi = probToLogAxis(DOMINANT_THRESHOLD_MAX);
+  const scaled = (probToLogAxis(prob) - lo) / Math.max(0.001, hi - lo);
+  return Math.max(0, Math.min(1, scaled)) * 100;
+}
+
+function formatYAxisProbability(value, isTop = false) {
+  if (isTop) return '1';
+  if (value >= 0.9995) return value.toFixed(7).replace(/0+$/, '').replace(/\.$/, '');
+  return value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function updateDominantYAxis(threshold) {
+  const loGap = Math.max(DOMINANT_THRESHOLD_MAX_GAP, 1 - threshold);
+  const hiGap = DOMINANT_THRESHOLD_MAX_GAP;
+  const tickProb = frac => 1 - loGap * Math.pow(hiGap / loGap, frac);
+  const marks = [
+    ['dominantY100', 1, true],
+    ['dominantY80', tickProb(0.8), false],
+    ['dominantY60', tickProb(0.6), false],
+    ['dominantY40', tickProb(0.4), false],
+    ['dominantY20', tickProb(0.2), false],
+    ['dominantY0', threshold, false],
+  ];
+  marks.forEach(([id, value, isTop]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatYAxisProbability(value, isTop);
+  });
+}
+
+function dominantBreakdown(posIndex) {
+  const col = state.colDistribs[posIndex];
+  if (!col) return [];
+  return ['A', 'T', 'G', 'C'].map(base => ({
+    base,
+    count: col.cnt[base] || 0,
+    prob: col.freq[base] || 0,
+  })).sort((a, b) => b.prob - a.prob);
+}
+
+function renderDominantHistogram() {
+  const histEl = document.getElementById('dominantHist');
+  const posEl = document.getElementById('dominantPositions');
+  const xAxisEl = document.getElementById('dominantXAxis');
+  const tip = document.getElementById('dominantTooltip');
+  const scroller = document.getElementById('dominantChartScroll');
+  const panel = document.getElementById('uploadZone');
+  if (!histEl || !posEl) return;
+  if (!state.dominantStats.length) {
+    panel?.classList.add('no-data');
+    histEl.style.removeProperty('--bar-width');
+    histEl.innerHTML = `<div class="dominant-empty">
+      <div class="upload-icon">⊕</div>
+      <div class="upload-title">Drop FASTA here</div>
+      <div class="upload-sub">Dominant base probabilities render immediately after upload</div>
+    </div>`;
+    if (xAxisEl) xAxisEl.innerHTML = '';
+    posEl.textContent = 'No analysis yet';
+    return;
+  }
+  panel?.classList.remove('no-data');
+
+  const threshold = state.dominantThreshold;
+  updateDominantYAxis(threshold);
+  const useLog = false;
+  const zoomStart = Math.max(1, state.dominantZoom.start || 1);
+  const zoomEnd = Math.min(state.dominantStats.length, state.dominantZoom.end || state.dominantStats.length);
+  const visibleStats = state.dominantStats.slice(zoomStart - 1, zoomEnd);
+  const above = visibleStats.filter(d => d.prob >= threshold);
+  const barWidth = resolveDominantBarWidth(visibleStats.length);
+  const barGap = barWidth <= 3 ? 0 : 3;
+  histEl.style.setProperty('--bar-width', `${barWidth}px`);
+  histEl.style.setProperty('--bar-gap', `${barGap}px`);
+  if (xAxisEl) {
+    xAxisEl.style.setProperty('--bar-width', `${barWidth}px`);
+    xAxisEl.style.setProperty('--bar-gap', `${barGap}px`);
+  }
+  histEl.innerHTML = visibleStats.map(d => {
+    const isAbove = d.prob >= threshold;
+    const inHover = state.hoveredCandidate && d.pos >= state.hoveredCandidate.start + 1 && d.pos <= state.hoveredCandidate.start + state.hoveredCandidate.len;
+    const h = dominantHeight(d.prob, threshold, useLog);
+    return `<span class="dominant-bar ${isAbove ? 'above' : 'below'} ${inHover ? 'primer-hover' : ''}" data-pos="${d.pos}"
+      style="height:${h.toFixed(1)}%;background:${baseColor(d.base)};"
+      title="Pos ${d.pos}: ${d.base} ${(d.prob*100).toFixed(2)}% (${d.count}/${d.nvalid})"><span>${d.base}</span></span>`;
+  }).join('');
+  if (xAxisEl) {
+    xAxisEl.innerHTML = visibleStats.map(d =>
+      `<span class="dominant-x-tick">${d.pos === 1 || d.pos % 5 === 0 ? d.pos : ''}</span>`
+    ).join('');
+  }
+
+  histEl.querySelectorAll('.dominant-bar').forEach(bar => {
+    const pos = parseInt(bar.dataset.pos, 10);
+    const stat = state.dominantStats[pos - 1];
+    bar.addEventListener('mouseenter', () => {
+      if (!tip || !stat) return;
+      const rows = dominantBreakdown(pos - 1).map(v =>
+        `<div class="dominant-tip-row"><span class="dominant-tip-swatch" style="background:${baseColor(v.base)}"></span><span>${v.base} ${(v.prob*100).toFixed(1)}%</span></div>`
+      ).join('');
+      tip.innerHTML = `<b>Pos ${pos}</b> <span style="color:#aaa;">n=${stat.nvalid}</span>${rows}`;
+      tip.style.display = 'block';
+    });
+    bar.addEventListener('mousemove', e => {
+      if (!tip) return;
+      tip.style.left = `${Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12)}px`;
+      tip.style.top = `${Math.max(e.clientY - tip.offsetHeight - 12, 12)}px`;
+    });
+    bar.addEventListener('mouseleave', () => {
+      if (tip) tip.style.display = 'none';
+    });
+  });
+
+  posEl.textContent = `View ${zoomStart}-${zoomEnd} · ${above.length}/${visibleStats.length} positions >= ${threshold.toFixed(3)}`;
+  if (scroller) scroller.scrollLeft = Math.min(scroller.scrollLeft, scroller.scrollWidth);
+}
+
+function resolveDominantBarWidth(nBars) {
+  if (state.dominantZoom.barWidth) return state.dominantZoom.barWidth;
+  const scroller = document.getElementById('dominantChartScroll');
+  const available = Math.max(1, scroller?.clientWidth || 1);
+  if (!nBars) return 1;
+  return Math.max(1, Math.floor(available / nBars));
+}
+
+function getDominantBarGap(nBars) {
+  return resolveDominantBarWidth(nBars) <= 3 ? 0 : 3;
+}
+
+function saveDominantPng() {
+  if (!state.dominantStats.length) { toast('Run analysis before saving chart', true); return; }
+
+  const useLog = false;
+  const threshold = state.dominantThreshold;
+  const zoomStart = Math.max(1, state.dominantZoom.start || 1);
+  const zoomEnd = Math.min(state.dominantStats.length, state.dominantZoom.end || state.dominantStats.length);
+  const visibleStats = state.dominantStats.slice(zoomStart - 1, zoomEnd);
+  const barW = Math.max(8, Math.min(32, state.dominantZoom.barWidth || 18));
+  const gap = 3;
+  const margin = { left: 70, right: 22, top: 36, bottom: 62 };
+  const plotH = 220;
+  const width = Math.max(960, margin.left + margin.right + visibleStats.length * (barW + gap));
+  const height = margin.top + plotH + margin.bottom;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0d0f14';
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = '#2a3045';
+  ctx.fillStyle = '#7a8aaa';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'right';
+  for (let pct = 0; pct <= 100; pct += 20) {
+    const y = margin.top + plotH - (pct / 100) * plotH;
+    const loGap = Math.max(DOMINANT_THRESHOLD_MAX_GAP, 1 - threshold);
+    const hiGap = DOMINANT_THRESHOLD_MAX_GAP;
+    const labelValue = pct === 100 ? 1 : 1 - loGap * Math.pow(hiGap / loGap, pct / 100);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, y);
+    ctx.lineTo(width - margin.right, y);
+    ctx.stroke();
+    ctx.fillText(formatYAxisProbability(labelValue, pct === 100), margin.left - 8, y + 4);
+  }
+
+  visibleStats.forEach((d, idx) => {
+    const isAbove = d.prob >= threshold;
+    const h = dominantHeight(d.prob, threshold, useLog) / 100 * plotH;
+    const x = margin.left + idx * (barW + gap);
+    const y = margin.top + plotH - h;
+    ctx.fillStyle = isAbove ? baseColor(d.base) : '#3b4250';
+    ctx.fillRect(x, y, barW, h);
+    if (isAbove && h > 18) {
+      ctx.fillStyle = '#d0dcea';
+      ctx.font = 'bold 13px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.base, x + barW / 2, y + 14);
+    }
+    if (d.pos === 1 || d.pos % 5 === 0) {
+      ctx.fillStyle = '#7a8aaa';
+      ctx.font = '12px Arial';
+      ctx.fillText(d.pos, x + barW / 2, margin.top + plotH + 18);
+    }
+  });
+
+  ctx.fillStyle = '#d0dcea';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Positions ${zoomStart}-${zoomEnd} · Threshold: ${threshold.toFixed(3)}${useLog ? ' · log scale' : ''}`, margin.left, 22);
+  ctx.textAlign = 'right';
+  ctx.fillText('Position', width - margin.right, height - 22);
+
+  const link = document.createElement('a');
+  link.download = 'dominant-base-probability.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 function scoreToColor(s) {
@@ -1322,11 +2026,9 @@ function getPrimerSeq(cand) {
 }
 
 function selectCandidate(idx) {
-  // Toggle active style
   document.querySelectorAll('.candidate-item').forEach(el => el.classList.remove('active'));
   const el = document.getElementById(`cand-${idx}`);
   if (el) el.classList.add('active');
-
   state.activeCandidate = state.candidates[idx];
   renderSeq(state.activeCandidate);
   openDetail(idx);
@@ -1334,106 +2036,86 @@ function selectCandidate(idx) {
 
 // ── DETAIL PANEL ─────────────────────────────────────────────────────────────
 function plasmaColor(t) {
-  const r = Math.round(Math.max(0,Math.min(255,
+  const r  = Math.round(Math.max(0, Math.min(255,
     t < 0.25 ? 13 + t*4*90 : t < 0.5 ? 103 + (t-0.25)*4*74 :
-    t < 0.75 ? 177 + (t-0.5)*4*46 : 223 + (t-0.75)*4*17
-  )));
-  const g = Math.round(Math.max(0,Math.min(255,
+    t < 0.75 ? 177 + (t-0.5)*4*46 : 223 + (t-0.75)*4*17)));
+  const g  = Math.round(Math.max(0, Math.min(255,
     t < 0.25 ? 8 + t*4*(-8) : t < 0.5 ? 0 + (t-0.25)*4*42 :
-    t < 0.75 ? 42 + (t-0.5)*4*58 : 100 + (t-0.75)*4*149
-  )));
-  const b2 = Math.round(Math.max(0,Math.min(255,
+    t < 0.75 ? 42 + (t-0.5)*4*58 : 100 + (t-0.75)*4*149)));
+  const b2 = Math.round(Math.max(0, Math.min(255,
     t < 0.25 ? 135 + t*4*(-5) : t < 0.5 ? 168 + (t-0.25)*4*(-24) :
-    t < 0.75 ? 98 + (t-0.5)*4*(-62) : 36 + (t-0.75)*4*(-3)
-  )));
+    t < 0.75 ? 98 + (t-0.5)*4*(-62) : 36 + (t-0.75)*4*(-3))));
   return `rgb(${r},${g},${b2})`;
 }
 
 function openDetail(idx) {
-  const cand = state.candidates[idx];
+  const cand      = state.candidates[idx];
   const primerSeq = getPrimerSeq(cand);
-  const total = state.sequences.length;
+  const total     = state.sequences.length;
 
-  // ── Per-locus JSD ──────────────────────────────────────────────────────────
   const locusScores = [];
   for (let i = cand.start; i < cand.start + cand.len; i++) {
-    locusScores.push({ pos: i+1, jsd: state.windowedScores[i], raw: state.jsdScores[i] });
+    locusScores.push({ pos: i + 1, jsd: state.windowedScores[i], raw: state.jsdScores[i] });
   }
 
-  // Per-locus per-base variant counts for tooltip
   function locusVariants(pos) {
     const cnt = {};
     let ngap = 0;
     for (const s of state.sequences) {
       const b = (s.seq[pos] || '-').toUpperCase();
       if (b === '-' || b === '.') ngap++;
-      else cnt[b] = (cnt[b]||0) + 1;
+      else cnt[b] = (cnt[b] || 0) + 1;
     }
-    const nvalid = total - ngap;
-    return { cnt, nvalid, ngap,
-      sorted: Object.entries(cnt).sort((a,b)=>b[1]-a[1])
-               .map(([b,n])=>({base:b, count:n, pct:n/total})) };
+    return {
+      cnt, nvalid: total - ngap, ngap,
+      sorted: Object.entries(cnt).sort((a, b) => b[1] - a[1])
+               .map(([b, n]) => ({ base: b, count: n, pct: n / total })),
+    };
   }
 
-  // ── Summary values ─────────────────────────────────────────────────────────
-  const aboveC = locusScores.filter(l => l.jsd >= state.c).length;
-  const cFrac  = aboveC / cand.len;
-  const gcCount = [...primerSeq].filter(b=>'GC'.includes(b)).length;
-  const gcRatio = gcCount / primerSeq.length;
-  const A = [...primerSeq].filter(b=>b==='A').length;
-  const T = [...primerSeq].filter(b=>b==='T').length;
-  const G = [...primerSeq].filter(b=>b==='G').length;
-  const C = [...primerSeq].filter(b=>b==='C').length;
+  const aboveC   = locusScores.filter(l => l.jsd >= state.c).length;
+  const cFrac    = aboveC / cand.len;
+  const gcCount  = [...primerSeq].filter(b => 'GC'.includes(b)).length;
+  const gcRatio  = gcCount / primerSeq.length;
+  const A = [...primerSeq].filter(b => b === 'A').length;
+  const T = [...primerSeq].filter(b => b === 'T').length;
+  const G = [...primerSeq].filter(b => b === 'G').length;
+  const C = [...primerSeq].filter(b => b === 'C').length;
   const Tm = 2*(A+T) + 4*(G+C);
 
-  // ── Haplotypes ─────────────────────────────────────────────────────────────
   const haplotypeCounts = {};
   for (const s of state.sequences) {
     const hap = s.seq.slice(cand.start, cand.start + cand.len);
     haplotypeCounts[hap] = (haplotypeCounts[hap] || 0) + 1;
   }
-  const haplotypes = Object.entries(haplotypeCounts)
+  const haplotypes  = Object.entries(haplotypeCounts)
     .map(([seq, count]) => ({ seq, count, pct: count / total }))
     .sort((a, b) => b.count - a.count);
   const dominantHap = haplotypes[0]?.seq || primerSeq;
-  function diffPositions(hapSeq) {
-    const diffs = [];
-    for (let i = 0; i < hapSeq.length; i++) {
-      if (hapSeq[i] !== dominantHap[i]) diffs.push(i);
-    }
-    return diffs;
-  }
 
-  // ── HEADER: ID + chips ────────────────────────────────────────────────────
   document.getElementById('detailId').textContent =
-    `PRIMER #${idx+1}  pos ${cand.start+1}–${cand.start+cand.len}`;
+    `PRIMER #${idx + 1}  pos ${cand.start + 1}–${cand.start + cand.len}`;
 
-  function chip(label, value, color, warn='') {
-    return `<span style="
-      display:inline-flex;flex-direction:column;
-      background:var(--surface3);border:1px solid var(--border);
-      border-radius:3px;padding:3px 9px;gap:1px;white-space:nowrap;
-    ">
+  function chip(label, value, color, warn = '') {
+    return `<span style="display:inline-flex;flex-direction:column;background:var(--surface3);border:1px solid var(--border);border-radius:3px;padding:3px 9px;gap:1px;white-space:nowrap;">
       <span style="font-family:var(--mono);font-size:8px;color:var(--text-faint);letter-spacing:0.1em;">${label}</span>
       <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:${color};">${value}${warn}</span>
     </span>`;
   }
   document.getElementById('detailChips').innerHTML =
-    chip('SCORE',    cand.score.toFixed(4), scoreToColor(cand.score)) +
+    chip('SCORE',           cand.score.toFixed(4), scoreToColor(cand.score)) +
     chip('CONSERVED LOCI', `${(cFrac*100).toFixed(1)}%`, 'var(--accent)',
          `<span style="font-size:9px;color:var(--text-faint);margin-left:4px;">${aboveC}/${cand.len} ≥${state.c.toFixed(2)}</span>`) +
-    chip('GC', `${(gcRatio*100).toFixed(1)}%`, gcRatio>=0.4&&gcRatio<=0.6?'var(--accent)':'var(--accent3)',
-         gcRatio>=0.4&&gcRatio<=0.6?' ✓':' ⚠') +
-    chip('Tm', `${Tm}°C`, 'var(--accent2)') +
+    chip('GC', `${(gcRatio*100).toFixed(1)}%`,
+         gcRatio >= 0.4 && gcRatio <= 0.6 ? 'var(--accent)' : 'var(--accent3)',
+         gcRatio >= 0.4 && gcRatio <= 0.6 ? ' ✓' : ' ⚠') +
+    chip('Tm',     `${Tm}°C`,       'var(--accent2)') +
     chip('LENGTH', `${cand.len} nt`, 'var(--text)') +
-    chip('DEPTH', `${total}`, 'var(--text-dim)');
+    chip('DEPTH',  `${total}`,       'var(--text-dim)');
 
-  // ── HEADER: plasma track ─────────────────────────────────────────────────
-  const trackEl  = document.getElementById('detailTrack');
-  const rulerEl  = document.getElementById('detailRuler');
-  const tip      = document.getElementById('locusTooltip');
-
-  // Track cells
+  const trackEl = document.getElementById('detailTrack');
+  const rulerEl = document.getElementById('detailRuler');
+  const tip     = document.getElementById('locusTooltip');
   trackEl.innerHTML = '';
   rulerEl.innerHTML = '';
 
@@ -1444,63 +2126,59 @@ function openDetail(idx) {
     const cell    = document.createElement('span');
     cell.className = 'locus-base-cell';
     Object.assign(cell.style, {
-      display:'inline-flex', alignItems:'center', justifyContent:'center',
-      flex:'1', minWidth:'18px', height:'34px',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      flex: '1', minWidth: '18px', height: '34px',
       background: bgColor, color: textCol,
-      fontFamily:'var(--mono)', fontSize:'14px', fontWeight:'700',
-      borderRadius:'2px', cursor:'crosshair',
+      fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: '700',
+      borderRadius: '2px', cursor: 'crosshair',
       borderBottom: ls.jsd >= state.c ? '3px solid rgba(255,255,255,0.55)' : '3px solid transparent',
-      userSelect:'none',
+      userSelect: 'none',
     });
     cell.textContent = base;
 
-    // Pre-compute per-locus variant data for tooltip
     const vd = locusVariants(cand.start + i);
-
     cell.addEventListener('mouseenter', () => {
       const varLines = vd.sorted.slice(0, 5).map(v =>
-        `  <span style="color:${{'A':'#5de8a8','T':'#f07a5a','G':'#5ab4f0','C':'#e0c04a'}[v.base]||'var(--text)'};">${v.base}</span>` +
+        `  <span style="color:${baseColor(v.base)};">${v.base}</span>` +
         `  ${v.count.toString().padStart(5)}  <b style="color:var(--accent3)">${(v.pct*100).toFixed(2)}%</b>`
       ).join('<br>');
       const gapLine = vd.ngap > 0
         ? `<br>  <span style="color:var(--text-faint);">-</span>  ${vd.ngap.toString().padStart(5)}  <span style="color:var(--text-faint)">${(vd.ngap/total*100).toFixed(2)}%</span>`
         : '';
-      const baseColor = {'A':'#5de8a8','T':'#f07a5a','G':'#5ab4f0','C':'#e0c04a'}[base] || 'var(--text)';
       tip.innerHTML =
-        `<b style="color:var(--text)">Pos ${ls.pos}</b>  base: <b style="color:${baseColor}">${base}</b><br>` +
+        `<b style="color:var(--text)">Pos ${ls.pos}</b>  base: <b style="color:${baseColor(base)};">${base}</b><br>` +
         `JSD: <b style="color:var(--accent2)">${ls.jsd.toFixed(4)}</b>  raw: ${ls.raw.toFixed(4)}<br>` +
         `<span style="color:var(--text-faint);font-size:9px;">──────────────────</span><br>` +
         varLines + gapLine;
       tip.style.display = 'block';
     });
     cell.addEventListener('mousemove', e => {
-      tip.style.left = (e.clientX - tip.offsetWidth - 0) + 'px';
+      tip.style.left = (e.clientX - tip.offsetWidth) + 'px';
       tip.style.top  = (e.clientY - tip.offsetHeight - 128) + 'px';
     });
     cell.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
     trackEl.appendChild(cell);
 
-    // Ruler span
-    const relPos = i + 1;
-    const show = (relPos === 1 || relPos % 5 === 0 || relPos === cand.len);
+    const relPos    = i + 1;
+    const show      = (relPos === 1 || relPos % 5 === 0 || relPos === cand.len);
     const rulerSpan = document.createElement('span');
     Object.assign(rulerSpan.style, {
-      display:'inline-flex', alignItems:'center', justifyContent:'center',
-      flex:'1', minWidth:'18px', whiteSpace:'nowrap', overflow:'visible',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      flex: '1', minWidth: '18px', whiteSpace: 'nowrap', overflow: 'visible',
     });
     rulerSpan.textContent = show ? ls.pos : '';
     rulerEl.appendChild(rulerSpan);
   });
 
-  // ── BODY: haplotype BLAST alignment only ──────────────────────────────────
-  const hapCount = haplotypes.length;
-  const isMonomorphic = hapCount === 1;
-  const body = document.getElementById('detailBody');
+  // Haplotype alignment body
+  const hapCount       = haplotypes.length;
+  const isMonomorphic  = hapCount === 1;
+  const body           = document.getElementById('detailBody');
 
   let html = `<div style="padding:0 0 4px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
     Haplotype Alignment
     <span style="color:var(--text-faint);font-weight:400;margin-left:8px;font-size:9px;">
-      ${hapCount} unique haplotype${hapCount!==1?'s':''} · ${total} sequences · BLAST-style
+      ${hapCount} unique haplotype${hapCount !== 1 ? 's' : ''} · ${total} sequences · BLAST-style
     </span>
   </div>`;
 
@@ -1509,20 +2187,20 @@ function openDetail(idx) {
       All ${total} sequences identical at this primer window
     </div>`;
   } else {
-    const domSeq  = haplotypes[0].seq;
-    const top3    = haplotypes.slice(0, 3);
+    const domSeq   = haplotypes[0].seq;
+    const top3     = haplotypes.slice(0, 3);
     const restHaps = haplotypes.slice(3);
-    const moreId  = 'hap-more-' + cand.start;
+    const moreId   = 'hap-more-' + cand.start;
 
     function blastAlign(qSeq, sSeq, sRank, sPct, sCount) {
       let identLine = '', colorQ = '', colorS = '';
       for (let i = 0; i < Math.max(qSeq.length, sSeq.length); i++) {
-        const q = qSeq[i]||'-', s = sSeq[i]||'-';
-        const same = q === s, gap = q==='-'||s==='-';
+        const q = qSeq[i] || '-', s = sSeq[i] || '-';
+        const same = q === s, gap = q === '-' || s === '-';
         identLine += same ? '|' : (gap ? ' ' : '.');
         function bspan(b, mis) {
-          if (b==='-') return '<span style="color:var(--text-faint)">-</span>';
-          const bc = {A:'#5de8a8',T:'#f07a5a',G:'#5ab4f0',C:'#e0c04a'}[b]||'var(--text)';
+          if (b === '-') return '<span style="color:var(--text-faint)">-</span>';
+          const bc = baseColor(b);
           return mis
             ? `<span style="color:var(--accent3);background:rgba(240,160,74,0.2);font-weight:700;border-radius:1px">${b}</span>`
             : `<span style="color:${bc}">${b}</span>`;
@@ -1530,8 +2208,8 @@ function openDetail(idx) {
         colorQ += bspan(q, !same && !gap);
         colorS += bspan(s, !same && !gap);
       }
-      const nId = [...qSeq].filter((c,i)=>c===sSeq[i]).length;
-      const pId = (nId/qSeq.length*100).toFixed(1);
+      const nId  = [...qSeq].filter((c, i) => c === sSeq[i]).length;
+      const pId  = (nId / qSeq.length * 100).toFixed(1);
       const nMis = qSeq.length - nId;
       return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:3px;padding:10px 14px;margin-bottom:8px;font-family:var(--mono);font-size:12px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
@@ -1545,9 +2223,8 @@ function openDetail(idx) {
         `</div></div></div>`;
     }
 
-    // Dominant header
     const domColorSeq = [...domSeq].map(b => {
-      const c = {A:'#5de8a8',T:'#f07a5a',G:'#5ab4f0',C:'#e0c04a'}[b]||'var(--text)';
+      const c = baseColor(b);
       return `<span style="color:${c}">${b}</span>`;
     }).join('');
 
@@ -1564,14 +2241,14 @@ function openDetail(idx) {
     </div>`;
 
     top3.slice(1).forEach((h, i) => {
-      html += blastAlign(domSeq, h.seq, i+2, (h.pct*100).toFixed(1), h.count);
+      html += blastAlign(domSeq, h.seq, i + 2, (h.pct*100).toFixed(1), h.count);
     });
 
     if (restHaps.length > 0) {
-      html += `<button class="expand-variants-btn" onclick="toggleVars('${moreId}')">▸ Show ${restHaps.length} more haplotype${restHaps.length>1?'s':''}</button>
+      html += `<button class="expand-variants-btn" onclick="toggleVars('${moreId}')">▸ Show ${restHaps.length} more haplotype${restHaps.length > 1 ? 's' : ''}</button>
       <div id="${moreId}" style="display:none;margin-top:8px;">`;
       restHaps.forEach((h, i) => {
-        html += blastAlign(domSeq, h.seq, i+4, (h.pct*100).toFixed(1), h.count);
+        html += blastAlign(domSeq, h.seq, i + 4, (h.pct*100).toFixed(1), h.count);
       });
       html += `</div>`;
     }
@@ -1593,75 +2270,239 @@ function closeDetail() {
   renderSeq();
 }
 
-// ── FILE LOAD ─────────────────────────────────────────────────────────────────
+// ── FILE LOAD ────────────────────────────────────────────────────────────────
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
-    const text = e.target.result;
-    const seqs = parseFASTA(text);
-    if (!seqs.length) { toast('No valid FASTA sequences found', true); return; }
+    const parsedSeqs = parseFASTA(e.target.result);
+    if (!parsedSeqs.length) { toast('No valid FASTA sequences found', true); return; }
 
-    // Check all same length (aligned)
+    const { seqs, flipped } = orientSequencesToReference(parsedSeqs);
     const lens = [...new Set(seqs.map(s => s.seq.length))];
     let seqsAligned = seqs;
     if (lens.length > 1) {
-      toast(`Warning: sequences have unequal lengths (${lens.join(', ')}). Using first ${lens[0]} nt.`);
-      seqsAligned = seqs.map(s => ({...s, seq: s.seq.slice(0, lens[0])}));
+      toast(`Warning: unequal lengths. Using first ${lens[0]} nt.`);
+      seqsAligned = seqs.map(s => ({ ...s, seq: s.seq.slice(0, lens[0]) }));
     }
 
-    state.sequences = seqsAligned;
-    state.seqLen = seqsAligned[0].seq.length;
-    state.consensusSeq = buildConsensus(seqsAligned);
-    state.candidates = [];
+    state.sequences      = seqsAligned;
+    state.orientationStats = { flipped };
+    state.seqLen         = seqsAligned[0].seq.length;
+    state.consensusSeq   = buildConsensus(seqsAligned);
+    state.candidates     = [];
+    const { raw, windowed, colDistribs } = computeJSD(seqsAligned, state.WINDOW, state.LAMBDA_JSD);
+    state.jsdScores      = raw;
+    state.windowedScores = windowed;
+    state.colDistribs    = colDistribs;
+    state.dominantStats  = dominantBaseStats(colDistribs);
     state.activeCandidate = null;
-    state.showFull = false;
+    state.hoveredCandidate = null;
+    state.showFull       = false;
 
-    // Show sequence display
-    document.getElementById('uploadZone').style.display = 'none';
-    document.getElementById('seqDisplayWrap').style.display = 'flex';
-    document.getElementById('nSeqDisplay').textContent = seqsAligned.length;
-    document.getElementById('lenDisplay').textContent = `${state.seqLen} nt`;
-    document.getElementById('seqLabel').className = 'panel-label active';
-    document.getElementById('runBtn').disabled = false;
-    document.getElementById('candidatesSection').style.display = 'none';
-    document.getElementById('statsSection').style.display = 'none';
+    document.getElementById('uploadZone').style.display    = 'flex';
+    document.getElementById('nSeqDisplay').textContent     = seqsAligned.length;
+    document.getElementById('lenDisplay').textContent      = `${state.seqLen} nt`;
+    document.getElementById('seqLabel').className          = 'panel-label active';
+    document.getElementById('runBtn').disabled             = false;
+    document.getElementById('candidatesList').innerHTML = '<div class="no-candidates">Run analysis to find candidates</div>';
+    document.getElementById('candidateCount').textContent = '';
+    document.getElementById('statsSection').style.display      = 'none';
 
-    renderSeq();
-    setStatus(`Loaded ${seqsAligned.length} sequences × ${state.seqLen} nt`, 'blue');
-    toast(`Loaded: ${seqsAligned.length} sequences`);
+    resetDominantZoom();
+    setStatus(`Loaded ${seqsAligned.length} sequences × ${state.seqLen} nt · histogram ready${flipped.length ? ` · ${flipped.length} RC fixed` : ''}`, 'blue');
+    toast(`Loaded: ${seqsAligned.length} sequences${flipped.length ? ` · fixed ${flipped.length} reverse-complement` : ''}`);
   };
   reader.readAsText(file);
 }
 
 // ── EVENT BINDINGS ────────────────────────────────────────────────────────────
-const fileInput = document.getElementById('fileInput');
-const uploadZone = document.getElementById('uploadZone');
+const _fileInput  = document.getElementById('fileInput');
+const _uploadZone = document.getElementById('uploadZone');
 
-fileInput.addEventListener('change', e => {
+_fileInput.addEventListener('change', e => {
   if (e.target.files[0]) handleFile(e.target.files[0]);
 });
 
-// Drag and drop on the label
-uploadZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  uploadZone.classList.add('drag-over');
+_uploadZone.addEventListener('dragover', e => {
+  e.preventDefault(); e.stopPropagation();
+  _uploadZone.classList.add('drag-over');
 });
-uploadZone.addEventListener('dragleave', e => {
+_uploadZone.addEventListener('dragleave', e => {
   e.stopPropagation();
-  uploadZone.classList.remove('drag-over');
+  _uploadZone.classList.remove('drag-over');
 });
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  uploadZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
+_uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); e.stopPropagation();
+  _uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
 
-// Slider sync on initial load
+function bindDominantSelection() {
+  const scroller = document.getElementById('dominantChartScroll');
+  const selection = document.getElementById('dominantSelection');
+  if (!scroller || !selection) return;
+
+  let dragStartX = null;
+  let dragStartScroll = 0;
+
+  function visibleStats() {
+    const zoomStart = Math.max(1, state.dominantZoom.start || 1);
+    const zoomEnd = Math.min(state.dominantStats.length, state.dominantZoom.end || state.dominantStats.length);
+    return state.dominantStats.slice(zoomStart - 1, zoomEnd);
+  }
+
+  function pointerToIndex(clientX) {
+    const rect = scroller.getBoundingClientRect();
+    const x = clientX - rect.left + scroller.scrollLeft;
+    const slot = resolveDominantBarWidth(visibleStats().length) + getDominantBarGap(visibleStats().length);
+    const idx = Math.floor(Math.max(0, x) / slot);
+    return Math.max(0, Math.min(visibleStats().length - 1, idx));
+  }
+
+  scroller.addEventListener('pointerdown', e => {
+    if (!state.dominantStats.length || e.button !== 0) return;
+    if (e.detail > 1) return;
+    dragStartX = e.clientX;
+    dragStartScroll = scroller.scrollLeft;
+    const rect = scroller.getBoundingClientRect();
+    selection.style.display = 'block';
+    selection.style.left = `${e.clientX - rect.left + scroller.scrollLeft}px`;
+    selection.style.width = '1px';
+    scroller.setPointerCapture(e.pointerId);
+  });
+
+  scroller.addEventListener('pointermove', e => {
+    if (dragStartX === null) return;
+    const rect = scroller.getBoundingClientRect();
+    const current = e.clientX - rect.left + scroller.scrollLeft;
+    const start = dragStartX - rect.left + dragStartScroll;
+    selection.style.left = `${Math.max(0, Math.min(start, current))}px`;
+    selection.style.width = `${Math.abs(current - start)}px`;
+  });
+
+  scroller.addEventListener('pointerup', e => {
+    if (dragStartX === null) return;
+    const visible = visibleStats();
+    const moved = Math.abs(e.clientX - dragStartX);
+    const startIdx = pointerToIndex(dragStartX);
+    const endIdx = pointerToIndex(e.clientX);
+    dragStartX = null;
+    selection.style.display = 'none';
+
+    if (moved < 8 || !visible.length) return;
+    const lo = Math.min(startIdx, endIdx);
+    const hi = Math.max(startIdx, endIdx);
+    if (hi <= lo) return;
+
+    state.dominantZoom.start = visible[lo].pos;
+    state.dominantZoom.end = visible[hi].pos;
+    renderDominantHistogram();
+    scroller.scrollLeft = 0;
+  });
+
+  scroller.addEventListener('pointercancel', () => {
+    dragStartX = null;
+    selection.style.display = 'none';
+  });
+
+  scroller.addEventListener('dblclick', e => {
+    if (!state.dominantStats.length) return;
+    e.preventDefault();
+    resetDominantZoom();
+    scroller.scrollLeft = 0;
+  });
+
+  scroller.addEventListener('wheel', e => {
+    if (!state.dominantStats.length) return;
+    e.preventDefault();
+    const oldWidth = state.dominantZoom.barWidth || resolveDominantBarWidth(visibleStats().length);
+    const nextWidth = Math.max(1, Math.min(80, oldWidth + (e.deltaY < 0 ? 2 : -2)));
+    if (nextWidth === oldWidth) return;
+
+    const rect = scroller.getBoundingClientRect();
+    const anchor = e.clientX - rect.left + scroller.scrollLeft;
+    const ratio = anchor / Math.max(1, scroller.scrollWidth);
+    state.dominantZoom.barWidth = nextWidth;
+    renderDominantHistogram();
+    scroller.scrollLeft = Math.max(0, ratio * scroller.scrollWidth - (e.clientX - rect.left));
+  }, { passive: false });
+}
+
+function bindLayoutResizers() {
+  const root = document.documentElement;
+  const main = document.querySelector('.main-layout');
+  const mainSplitter = document.getElementById('mainSplitter');
+  const candidateSplitter = document.getElementById('candidateSplitter');
+  const leftPanel = document.getElementById('leftPanel');
+  const candidates = document.getElementById('candidatesSection');
+  if (!main || !mainSplitter || !candidateSplitter || !leftPanel || !candidates) return;
+
+  mainSplitter.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    mainSplitter.classList.add('dragging');
+    mainSplitter.setPointerCapture(e.pointerId);
+
+    function move(ev) {
+      const rect = main.getBoundingClientRect();
+      const rightWidth = Math.max(280, Math.min(rect.width - 340, rect.right - ev.clientX));
+      root.style.setProperty('--right-width', `${rightWidth}px`);
+      renderDominantHistogram();
+    }
+    function up() {
+      mainSplitter.classList.remove('dragging');
+      mainSplitter.removeEventListener('pointermove', move);
+      mainSplitter.removeEventListener('pointerup', up);
+      mainSplitter.removeEventListener('pointercancel', up);
+    }
+    mainSplitter.addEventListener('pointermove', move);
+    mainSplitter.addEventListener('pointerup', up);
+    mainSplitter.addEventListener('pointercancel', up);
+  });
+
+  candidateSplitter.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    candidateSplitter.classList.add('dragging');
+    candidateSplitter.setPointerCapture(e.pointerId);
+
+    function move(ev) {
+      const rect = leftPanel.getBoundingClientRect();
+      const height = Math.max(120, Math.min(rect.height - 180, rect.bottom - ev.clientY));
+      root.style.setProperty('--candidates-height', `${height}px`);
+      renderDominantHistogram();
+    }
+    function up() {
+      candidateSplitter.classList.remove('dragging');
+      candidateSplitter.removeEventListener('pointermove', move);
+      candidateSplitter.removeEventListener('pointerup', up);
+      candidateSplitter.removeEventListener('pointercancel', up);
+    }
+    candidateSplitter.addEventListener('pointermove', move);
+    candidateSplitter.addEventListener('pointerup', up);
+    candidateSplitter.addEventListener('pointercancel', up);
+  });
+}
+
+function bindChartResizeObserver() {
+  const scroller = document.getElementById('dominantChartScroll');
+  if (!scroller || typeof ResizeObserver === 'undefined') return;
+  let lastWidth = scroller.clientWidth;
+  const observer = new ResizeObserver(() => {
+    if (Math.abs(scroller.clientWidth - lastWidth) < 2) return;
+    lastWidth = scroller.clientWidth;
+    if (!state.dominantZoom.barWidth) renderDominantHistogram();
+  });
+  observer.observe(scroller);
+}
+
+// Init sliders from CONFIG
 syncK(document.getElementById('kSlider').value);
 syncC(document.getElementById('cSlider').value);
+document.getElementById('dominantThresholdSlider').value = dominantThresholdToSlider(state.dominantThreshold).toFixed(3);
+syncDominantThreshold(document.getElementById('dominantThresholdSlider').value);
+bindDominantSelection();
+bindLayoutResizers();
+bindChartResizeObserver();
+
 </script>
 </body>
 </html>

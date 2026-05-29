@@ -18,57 +18,57 @@
 </header>
 
 <div class="main-layout">
-
   <!-- LEFT PANEL -->
   <div class="left-panel" id="leftPanel">
 
     <div id="uploadState" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
       <div class="panel-header">
         <span class="panel-label" id="seqLabel">ALIGNMENT INPUT</span>
+        <span class="seq-meta-item">Seq: <strong id="nSeqDisplay">—</strong></span>
+        <span class="seq-meta-item">Len: <strong id="lenDisplay">—</strong></span>
         <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint);" id="seqInfo"></span>
       </div>
-      <div id="uploadZone" class="upload-zone" style="position:relative;">
-        <div class="upload-icon">⊕</div>
-        <div class="upload-title">Drop FASTA / click to upload</div>
-        <div class="upload-sub">BLAST-aligned multi-FASTA format</div>
-        <input type="file" id="fileInput" accept=".fasta,.fa,.txt,.aln"
-          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;">
-      </div>
-      <div id="seqDisplayWrap" class="seq-display" style="display:none;">
-        <div class="seq-meta" style="flex-wrap:wrap;gap:6px 14px;padding:6px 16px;">
-          <span class="seq-meta-item">Seq: <strong id="nSeqDisplay">—</strong></span>
-          <span class="seq-meta-item">Len: <strong id="lenDisplay">—</strong></span>
-          <span class="seq-meta-item" id="trimNote" style="cursor:pointer;color:var(--accent3);font-size:10px;display:none;" onclick="toggleFullSeq()">▶ Expand</span>
-          <span style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
-              FONT
-              <input type="range" id="seqFontSlider" min="10" max="22" step="1" value="14"
-                style="width:55px;margin:0;" oninput="applySeqDisplay()">
-              <span id="seqFontVal" style="color:var(--accent);min-width:18px;">14</span>px
-            </label>
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;cursor:pointer;">
-              <input type="checkbox" id="colorBasesCb" checked onchange="applySeqDisplay()" style="accent-color:var(--accent);cursor:pointer;">
-              A/T/G/C
-            </label>
-            <label style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--text-faint);letter-spacing:0.08em;">
-              LABEL/
-              <select id="labelIntervalSel" onchange="applySeqDisplay()"
-                style="background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:2px;cursor:pointer;">
-                <option value="5">5 nt</option>
-                <option value="10" selected>10 nt</option>
-                <option value="20">20 nt</option>
-                <option value="50">50 nt</option>
-              </select>
-            </label>
-          </span>
+
+      <div id="uploadZone" class="dominant-panel chart-drop-zone no-data">
+        <div class="dominant-toolbar">
+          <label class="dominant-threshold-control">
+            <span>Threshold</span>
+            <input type="range" id="dominantThresholdSlider" min="0" max="1" step="0.001" value="0.500" oninput="syncDominantThreshold(this.value)">
+            <input type="text" id="dominantThresholdVal" value="0.900" inputmode="decimal" onkeydown="handleDominantThresholdKey(event)" onchange="syncDominantThresholdInput(this.value)">
+          </label>
+          <input type="file" id="fileInput" accept=".fasta,.fa,.txt,.aln">
         </div>
-        <div class="seq-scroll" id="seqScroll">
-          <!-- sequence content rendered here -->
+
+        <div class="dominant-chart-wrap">
+          <div class="dominant-y-axis">
+            <span id="dominantY100">100%</span>
+            <span id="dominantY80">80%</span>
+            <span id="dominantY60">60%</span>
+            <span id="dominantY40">40%</span>
+            <span id="dominantY20">20%</span>
+            <span id="dominantY0">0%</span>
+            <em>Dominant base %</em>
+          </div>
+          <div class="dominant-chart-scroll" id="dominantChartScroll">
+            <div class="dominant-grid" id="dominantHist">
+              <div class="dominant-empty">
+                <div class="upload-icon">⊕</div>
+                <div class="upload-title">Drop FASTA here</div>
+                <div class="upload-sub">Dominant base probabilities render immediately after upload</div>
+              </div>
+            </div>
+            <div class="dominant-selection" id="dominantSelection"></div>
+            <div class="dominant-x-axis" id="dominantXAxis"></div>
+          </div>
+          <div class="dominant-tooltip" id="dominantTooltip"></div>
         </div>
+        <span class="dominant-positions" id="dominantPositions">No analysis yet</span>
       </div>
     </div>
 
-    <div class="candidates-section" id="candidatesSection" style="display:none;">
+    <div class="panel-splitter horizontal-splitter" id="candidateSplitter"></div>
+
+    <div class="candidates-section" id="candidatesSection">
       <div class="panel-header" style="background:var(--surface2);">
         <span class="panel-label active">PRIMER CANDIDATES</span>
         <span id="candidateCount" style="margin-left:8px;font-family:var(--mono);font-size:10px;color:var(--accent);"></span>
@@ -80,6 +80,8 @@
     </div>
 
   </div>
+
+  <div class="panel-splitter vertical-splitter" id="mainSplitter"></div>
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
